@@ -68,8 +68,15 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>subversion</artifactId>
-            <version>2.5</version>
-            <optional>true</optional>
+            <version>2.6-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>subversion</artifactId>
+            <version>2.6-SNAPSHOT</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>

@@ -30,6 +30,7 @@ import hudson.triggers.SCMTrigger;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -43,7 +44,7 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
-public class GitStepRestartTest {
+public class SCMRestartTest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();

@@ -63,21 +63,8 @@ You may specify `poll: false` to disable polling for an SCM checkout.
 
 # Built-in integrations
 
-Currently there are special integrations with the Git (`git` step) and Subversion (`svn` step) plugins.
-
-## git
-
-the `git` step lets you define a repository to clone. For authentication, a reference to a configured credential can
-be passed.
-
-```groovy
-git url: 'git@git.local.domain:ps/project.git', credentialsId: '67c3072d-b9a7-44fa-a5aa-560ba9c1662f'
-```
-
-## svn
-
-At the moment this step is very simple and takes just a `url` parameter.
-Richer configuration may come in the future.
+Currently there are special integrations in the Git (`git` step) and Subversion (`svn` step) plugins.
+See those plugins for details.
 
 # Generic SCM step
 

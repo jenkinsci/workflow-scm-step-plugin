@@ -48,7 +48,7 @@ final class MultiSCMRevisionState extends SCMRevisionState {
         String key = scm.getKey();
         SCMRevisionState old = revisionStates.put(key, scmState);
         if (old != null) {
-            Logger.getLogger(MultiSCMRevisionState.class.getName()).log(Level.WARNING, "overriding old revision state {0} from {1}", new Object[] {old, key});
+            Logger.getLogger(MultiSCMRevisionState.class.getName()).log(Level.FINE, "overriding old revision state {0} from {1}", new Object[] {old, key});
         }
 	}
 

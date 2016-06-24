@@ -36,17 +36,34 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import static org.junit.Assert.*;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.For;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 @For(GenericSCMStep.class) // formerly a dedicated MercurialStep
 public class MercurialStepTest {
 
+    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule public JenkinsRule r = new JenkinsRule();
     @Rule public MercurialSampleRepoRule sampleRepo = new MercurialSampleRepoRule();
     @Rule public MercurialSampleRepoRule otherRepo = new MercurialSampleRepoRule();
+
+    @Issue("JENKINS-28121")
+    @Test public void freshWorkspace() throws Exception {
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.setDefinition(new CpsFlowDefinition(
+            "node {\n" +
+            "  checkout([$class: 'MercurialSCM', source: $/" + sampleRepo.fileUrl() + "/$])\n" +
+            "}"));
+        assertFalse(r.jenkins.getWorkspaceFor(p).exists());
+        r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        assertTrue(r.jenkins.getWorkspaceFor(p).exists());
+    }
 
     @Test public void multipleSCMs() throws Exception {
         sampleRepo.init();

@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.workflow.steps.scm;
 
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.Computer;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
@@ -106,6 +107,12 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
                     baseline = state.get(scm);
                 }
             }
+
+            final Computer computer = workspace.toComputer();
+            if (computer != null) {
+                launcher = launcher.decorateByEnv(computer.buildEnvironment(listener));
+            }
+
             scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
             SCMRevisionState pollingBaseline = null;
             if (poll || changelog) {

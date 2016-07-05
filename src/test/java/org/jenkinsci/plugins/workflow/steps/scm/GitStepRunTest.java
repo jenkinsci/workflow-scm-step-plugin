@@ -25,8 +25,13 @@
 package org.jenkinsci.plugins.workflow.steps.scm;
 
 import hudson.model.Label;
+import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTagAction;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
+import hudson.plugins.git.extensions.impl.CleanCheckout;
+import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
@@ -34,6 +39,7 @@ import hudson.triggers.SCMTrigger;
 import java.util.Iterator;
 import java.util.List;
 import jenkins.util.VirtualFile;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -216,6 +222,75 @@ public class GitStepRunTest {
             "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("+edited by build", b);
+    }
+
+    @Test public void checkCleanCheckout() throws Exception {
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
+        r.createOnlineSlave(Label.get("remote"));
+        p.setDefinition(new CpsFlowDefinition(
+                "node('remote') {\n" +
+                        "    ws {\n" +
+                        "        git(url: $/" + sampleRepo + "/$, cleanBeforeCheckout: true, cleanAfterCheckout: true)\n" +
+                        "    }\n" +
+                        "}"));
+        r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        GitSCM gitSCM = (GitSCM) p.getSCMs().iterator().next();
+
+        boolean hasCleanBeforeCheckoutExtension = false;
+        boolean hasCleanAfterCheckoutExtension = false;
+
+        for(GitSCMExtension extension : gitSCM.getExtensions()) {
+            if (CleanBeforeCheckout.class.equals(extension.getClass()))
+                hasCleanBeforeCheckoutExtension = true;
+
+            if (CleanCheckout.class.equals(extension.getClass()))
+                hasCleanAfterCheckoutExtension = true;
+        }
+
+        assertTrue(hasCleanBeforeCheckoutExtension);
+        assertTrue(hasCleanAfterCheckoutExtension);
+    }
+
+    @Test public void checkExcludedUsers() throws Exception {
+        String authorName = "systemUser";
+
+        sampleRepo.init();
+        sampleRepo.git("config", "user.name", "\"" + authorName + "\"");
+
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
+        p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
+        r.createOnlineSlave(Label.get("remote"));
+        p.setDefinition(new CpsFlowDefinition(
+                "node('remote') {\n" +
+                        "    ws {\n" +
+                        "        git(url: $/" + sampleRepo + "/$, excludedUsers: '" + authorName + "')\n" +
+                        "    }\n" +
+                        "}"));
+        r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        GitSCM gitSCM = (GitSCM) p.getSCMs().iterator().next();
+
+        UserExclusion userExclusionExtension = null;
+
+        for(GitSCMExtension extension : gitSCM.getExtensions()) {
+            if (UserExclusion.class.equals(extension.getClass())) {
+                userExclusionExtension = (UserExclusion) extension;
+                break;
+            }
+        }
+
+        assertNotNull(userExclusionExtension);
+        assertEquals(authorName, userExclusionExtension.getExcludedUsers());
+        assertTrue(userExclusionExtension.getExcludedUsersNormalized().contains(authorName));
+
+        sampleRepo.write("file2", "");
+        sampleRepo.git("add", "file2");
+        sampleRepo.git("commit", "--message=file2");
+        sampleRepo.notifyCommit(r);
+
+        WorkflowRun b = p.getLastBuild();
+        assertEquals(1, b.number); //cause commiter is excluded
     }
 
 }

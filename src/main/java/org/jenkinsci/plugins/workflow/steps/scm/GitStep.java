@@ -38,6 +38,8 @@ import hudson.plugins.git.GitTool;
 import hudson.scm.SCM;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -64,6 +66,9 @@ public final class GitStep extends SCMStep {
     private final String url;
     private String branch = "master";
     private String credentialsId;
+    private String excludedUsers = "";
+    private boolean cleanBeforeCheckout = false;
+    private boolean cleanAfterCheckout = false;
 
     @DataBoundConstructor public GitStep(String url) {
         this.url = url;
@@ -81,12 +86,36 @@ public final class GitStep extends SCMStep {
         return credentialsId;
     }
 
+    public String getExcludedUsers() {
+        return excludedUsers;
+    }
+
+    public boolean isCleanBeforeCheckout() {
+        return cleanBeforeCheckout;
+    }
+
+    public boolean isCleanAfterCheckout() {
+        return cleanAfterCheckout;
+    }
+
     @DataBoundSetter public void setBranch(String branch) {
         this.branch = branch;
     }
 
     @DataBoundSetter public void setCredentialsId(String credentialsId) {
         this.credentialsId = Util.fixEmpty(credentialsId);
+    }
+
+    @DataBoundSetter public void setExcludedUsers(String excludedUsers) {
+        this.excludedUsers = excludedUsers;
+    }
+
+    @DataBoundSetter public void setCleanBeforeCheckout(boolean cleanBeforeCheckout) {
+        this.cleanBeforeCheckout = cleanBeforeCheckout;
+    }
+
+    @DataBoundSetter public void setCleanAfterCheckout(boolean cleanAfterCheckout) {
+        this.cleanAfterCheckout = cleanAfterCheckout;
     }
 
     @SuppressWarnings("rawtypes")
@@ -108,12 +137,41 @@ public final class GitStep extends SCMStep {
                 Collections.EMPTY_LIST,
                 null,
                 null,
-                Collections.singletonList(cl.loadClass("hudson.plugins.git.extensions.impl.LocalBranch").getConstructor(String.class).newInstance(branch)));
+                createGitSCMExtensions(cl));
         } catch (RuntimeException x) {
             throw x;
         } catch (Exception x) {
             throw new IllegalStateException(x);
         }
+    }
+
+    /**
+     * Create list of GitSCMExtensions
+     * It's useful for simplified git step setup
+     *
+     * @param cl classloader from plugin manager
+     * @return list of extensions
+     * @throws ClassNotFoundException
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws InstantiationException
+     */
+    private List createGitSCMExtensions(ClassLoader cl) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        List extensions = new ArrayList();
+
+        extensions.add(cl.loadClass("hudson.plugins.git.extensions.impl.LocalBranch").getConstructor(String.class).newInstance(branch));
+        extensions.add(cl.loadClass("hudson.plugins.git.extensions.impl.UserExclusion").getConstructor(String.class).newInstance(excludedUsers));
+
+        if (cleanBeforeCheckout) {
+            extensions.add(cl.loadClass("hudson.plugins.git.extensions.impl.CleanBeforeCheckout").getConstructor().newInstance());
+        }
+
+        if (cleanAfterCheckout) {
+            extensions.add(cl.loadClass("hudson.plugins.git.extensions.impl.CleanCheckout").getConstructor().newInstance());
+        }
+
+        return extensions;
     }
 
     private static StandardCredentials lookupCredentials(Item project, @Nonnull String credentialId, String uri) {

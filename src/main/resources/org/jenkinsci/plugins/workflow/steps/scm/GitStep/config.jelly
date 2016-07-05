@@ -35,4 +35,13 @@ THE SOFTWARE.
         <c:select/>
     </f:entry>
     <st:include page="config-generic.jelly" class="org.jenkinsci.plugins.workflow.steps.scm.SCMStep"/>
+    <f:entry field="cleanBeforeCheckout">
+        <f:checkbox title="Clean before checkout?" default="false"/>
+    </f:entry>
+    <f:entry field="cleanAfterCheckout">
+        <f:checkbox title="Clean after checkout?" default="false"/>
+    </f:entry>
+    <f:entry field="excludedUsers" title="Polling ignores commits from certain users">
+        <f:textarea default=""/>
+    </f:entry>
 </j:jelly>

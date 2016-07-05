@@ -283,14 +283,6 @@ public class GitStepRunTest {
         assertNotNull(userExclusionExtension);
         assertEquals(authorName, userExclusionExtension.getExcludedUsers());
         assertTrue(userExclusionExtension.getExcludedUsersNormalized().contains(authorName));
-
-        sampleRepo.write("file2", "");
-        sampleRepo.git("add", "file2");
-        sampleRepo.git("commit", "--message=file2");
-        sampleRepo.notifyCommit(r);
-
-        WorkflowRun b = p.getLastBuild();
-        assertEquals(1, b.number); //cause commiter is excluded
     }
 
 }

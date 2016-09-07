@@ -36,13 +36,15 @@ import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import javax.annotation.CheckForNull;
+
 public abstract class AbstractSampleRepoRule extends ExternalResource {
 
     public static void run(boolean probing, File cwd, String... cmds) throws Exception {
         run(probing, cwd, null, cmds);
     }
 
-    public static void run(boolean probing, File cwd, Map<String,String> env, String... cmds) throws Exception {
+    public static void run(boolean probing, File cwd, @CheckForNull Map<String,String> env, String... cmds) throws Exception {
         try {
             ProcessBuilder pb = new ProcessBuilder(cmds);
             try {

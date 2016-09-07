@@ -27,6 +27,8 @@ package org.jenkinsci.plugins.workflow.steps.scm;
 import hudson.triggers.SCMTrigger;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Map;
+
 import static org.hamcrest.Matchers.is;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -37,6 +39,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 public abstract class AbstractSampleRepoRule extends ExternalResource {
 
     public static void run(boolean probing, File cwd, String... cmds) throws Exception {
+        run(probing, cwd, null, cmds);
+    }
+
+    public static void run(boolean probing, File cwd, Map<String,String> env, String... cmds) throws Exception {
         try {
             ProcessBuilder pb = new ProcessBuilder(cmds);
             try {
@@ -44,6 +50,10 @@ public abstract class AbstractSampleRepoRule extends ExternalResource {
             } catch (NoSuchMethodException x) {
                 // TODO remove when Java 7+
             }
+            if (env != null && !env.isEmpty()) {
+                pb.environment().putAll(env);
+            }
+
             int r = pb.directory(cwd).start().waitFor();
             String message = Arrays.toString(cmds) + " failed with error code";
             if (probing) {

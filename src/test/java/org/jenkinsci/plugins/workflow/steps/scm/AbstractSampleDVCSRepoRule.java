@@ -31,7 +31,12 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
+
+import javax.annotation.CheckForNull;
+
 import static org.jenkinsci.plugins.workflow.steps.scm.AbstractSampleRepoRule.run;
 
 public abstract class AbstractSampleDVCSRepoRule extends AbstractSampleRepoRule {
@@ -54,10 +59,14 @@ public abstract class AbstractSampleDVCSRepoRule extends AbstractSampleRepoRule 
     public abstract void init() throws Exception;
 
     protected final void run(String tool, String... cmds) throws Exception {
+        run(tool, null, cmds);
+    }
+
+    protected final void run(String tool, @CheckForNull Map<String,String> env, String... cmds) throws Exception {
         List<String> args = new ArrayList<String>();
         args.add(tool);
         args.addAll(Arrays.asList(cmds));
-        run(false, sampleRepo, args.toArray(new String[args.size()]));
+        run(false, sampleRepo, env, args.toArray(new String[args.size()]));
     }
 
     public final String bareUrl() throws UnsupportedEncodingException {

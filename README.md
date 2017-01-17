@@ -49,10 +49,14 @@ This means that you can run multiple SCMs, even from a dynamic list, and get a r
 
 ## Polling
 
-If you configure the _Poll SCM_ trigger in the Pipeline’s UI configuration screen, then by default Jenkins will also poll for changes according to the selected _Schedule_, and schedule new builds automatically if changes are detected.
-(Note that this configuration is not part of the Pipeline script, because it affects activities that Jenkins runs outside of the Pipeline.)
-Some SCMs allow polling with no workspace, which is ideal; others will try to lock the same slave and workspace previously used, to run polling on the slave.
+You can first configure the _Poll SCM_ trigger using the following sample pipeline step code for Poll SCM Trigger property:  
+```
+ properties([pipelineTriggers([pollSCM('H/2 * * * *')])])
+ ```
+ this will make Jenkins poll for changes according to selected _Schedule_, i.e. poll changes every half minute (H/2).  
+ (See the full step syntax for Poll SCM Trigger property: https://jenkins.io/doc/pipeline/steps/workflow-multibranch/#properties-set-job-properties)
 
+Some SCMs allow polling with no workspace, which is ideal; others will try to lock the same slave and workspace previously used, to run polling on the slave.  
 To avoid polling the server repeatedly, most SCM plugins allow remote commit triggers, such as the `/git/notifyCommit?url=…` HTTP endpoint in the case of the Git plugin.
 These also work with Pipelines, unless (as with freestyle projects) you checked _Ignore post-commit hooks_ in a _Poll SCM_ block.
 Depending on the SCM plugin, you may still need to configure a _Poll SCM_ trigger, though its _Schedule_ could be empty (or `@daily`, to serve as a fallback in case the commit triggers fail).

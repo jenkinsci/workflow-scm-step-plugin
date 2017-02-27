@@ -24,7 +24,10 @@
 
 package org.jenkinsci.plugins.workflow.steps.scm;
 
+import hudson.Launcher;
+import hudson.model.TaskListener;
 import hudson.triggers.SCMTrigger;
+import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.util.Arrays;
 import static org.hamcrest.Matchers.is;
@@ -38,13 +41,8 @@ public abstract class AbstractSampleRepoRule extends ExternalResource {
 
     public static void run(boolean probing, File cwd, String... cmds) throws Exception {
         try {
-            ProcessBuilder pb = new ProcessBuilder(cmds);
-            try {
-                ProcessBuilder.class.getMethod("inheritIO").invoke(pb);
-            } catch (NoSuchMethodException x) {
-                // TODO remove when Java 7+
-            }
-            int r = pb.directory(cwd).start().waitFor();
+            TaskListener listener = StreamTaskListener.fromStdout();
+            int r = new Launcher.LocalLauncher(listener).launch().cmds(cmds).pwd(cwd).stdout(listener).join();
             String message = Arrays.toString(cmds) + " failed with error code";
             if (probing) {
                 Assume.assumeThat(message, r, is(0));

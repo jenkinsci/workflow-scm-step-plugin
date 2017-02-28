@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.19</version>
+        <version>2.23</version>
         <relativePath />
     </parent>
     <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -40,6 +40,9 @@
     <properties>
         <jenkins.version>1.642.3</jenkins.version>
         <no-test-jar>false</no-test-jar>
+        <scm-api-plugin.version>2.0.8-20170228.204551-2</scm-api-plugin.version> <!-- TODO https://github.com/jenkinsci/scm-api-plugin/pull/32 -->
+        <git-plugin.version>3.1.0-20170228.205454-2</git-plugin.version> <!-- TODO https://github.com/jenkinsci/git-plugin/pull/478 -->
+        <subversion-plugin.version>2.7.2-20170228.204835-1</subversion-plugin.version> <!-- TODO https://github.com/jenkinsci/subversion-plugin/pull/178 -->
     </properties>
     <dependencies>
         <dependency>
@@ -49,8 +52,21 @@
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>scm-api</artifactId>
+            <version>${scm-api-plugin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>scm-api</artifactId>
+            <version>${scm-api-plugin.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>git</artifactId>
-            <version>2.5.0</version>
+            <version>${git-plugin.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -62,20 +78,20 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>git</artifactId>
-            <version>2.5.0</version>
+            <version>${git-plugin.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>subversion</artifactId>
-            <version>2.6</version>
+            <version>${subversion-plugin.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>subversion</artifactId>
-            <version>2.6</version>
+            <version>${subversion-plugin.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>

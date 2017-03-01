@@ -118,8 +118,8 @@ public class SCMStepTest {
                 SemaphoreStep.success("after/1", null);
                 r.j.assertBuildStatusSuccess(r.j.waitForCompletion(b1));
                 sampleSvnRepo.write("file2", "");
-                sampleSvnRepo.svn("add", "file2");
-                sampleSvnRepo.svn("commit", "--message=+file2");
+                sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file2");
+                sampleSvnRepo.svnkit("commit", "--message=+file2", sampleSvnRepo.wc());
                 WorkflowRun b2 = p.scheduleBuild2(0).waitForStart();
                 SemaphoreStep.success("before/2", null);
                 SemaphoreStep.waitForStart("after/2", b2);
@@ -128,8 +128,8 @@ public class SCMStepTest {
                 SemaphoreStep.waitForStart("before/3", b3);
                 assertPolling(p, PollingResult.Change.NONE);
                 sampleSvnRepo.write("file3", "");
-                sampleSvnRepo.svn("add", "file3");
-                sampleSvnRepo.svn("commit", "--message=+file3");
+                sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file3");
+                sampleSvnRepo.svnkit("commit", "--message=+file3", sampleSvnRepo.wc());
                 assertPolling(p, PollingResult.Change.SIGNIFICANT);
             }
         });

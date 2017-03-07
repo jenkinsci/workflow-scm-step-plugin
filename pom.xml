@@ -4,12 +4,12 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.19</version>
+        <version>2.23</version>
         <relativePath />
     </parent>
     <groupId>org.jenkins-ci.plugins.workflow</groupId>
     <artifactId>workflow-scm-step</artifactId>
-    <version>2.4-SNAPSHOT</version>
+    <version>2.5-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Pipeline: SCM Step</name>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+SCM+Step+Plugin</url>
@@ -40,6 +40,9 @@
     <properties>
         <jenkins.version>1.642.3</jenkins.version>
         <no-test-jar>false</no-test-jar>
+        <scm-api-plugin.version>2.0.8</scm-api-plugin.version>
+        <git-plugin.version>3.1.0</git-plugin.version>
+        <subversion-plugin.version>2.7.2</subversion-plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -49,8 +52,21 @@
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>scm-api</artifactId>
+            <version>${scm-api-plugin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>scm-api</artifactId>
+            <version>${scm-api-plugin.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>git</artifactId>
-            <version>2.5.0</version>
+            <version>${git-plugin.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -62,21 +78,27 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>git</artifactId>
-            <version>2.5.0</version>
+            <version>${git-plugin.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>subversion</artifactId>
-            <version>2.6</version>
+            <version>${subversion-plugin.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>subversion</artifactId>
-            <version>2.6</version>
+            <version>${subversion-plugin.version}</version>
             <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.tmatesoft.svnkit</groupId>
+            <artifactId>svnkit-cli</artifactId>
+            <version>1.8.14</version>
             <scope>test</scope>
         </dependency>
         <dependency>

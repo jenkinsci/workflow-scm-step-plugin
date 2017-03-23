@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.workflow.steps.scm;
 
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
@@ -123,7 +124,7 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
                 l.onCheckout(run, scm, workspace, listener, changelogFile, pollingBaseline);
             }
             scm.postCheckout(run, launcher, workspace, listener);
-            // TODO should we call buildEnvVars and return the result?
+            scm.buildEnvVars((AbstractBuild<?,?>) run, run.getEnvironment(listener));
     }
 
     public static abstract class SCMStepDescriptor extends AbstractStepDescriptorImpl {

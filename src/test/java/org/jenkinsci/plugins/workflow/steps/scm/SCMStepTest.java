@@ -32,10 +32,12 @@ import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-import jenkins.plugins.git.GitSampleRepoRule;
+
+import jenkins.plugins.git.*;
 import jenkins.scm.impl.subversion.SubversionSampleRepoRule;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
@@ -54,6 +56,29 @@ public class SCMStepTest {
     @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
     @Rule public GitSampleRepoRule sampleGitRepo = new GitSampleRepoRule();
     @Rule public SubversionSampleRepoRule sampleSvnRepo = new SubversionSampleRepoRule();
+
+    @Issue("JENKINS-26100")
+    @Test
+    public void scmVars() throws Exception {
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                sampleGitRepo.init();
+                sampleGitRepo.write("Jenkinsfile", "node('remote') {\n" +
+                        "    def gitCommit = checkout(scm).GIT_COMMIT\n" +
+                        "    echo \"GIT_COMMIT is ${gitCommit}\"\n" +
+                        "}\n");
+                sampleGitRepo.git("add", "Jenkinsfile");
+                sampleGitRepo.git("commit", "--message=files");
+                String commitHash = sampleGitRepo.head();
+                WorkflowJob p = r.j.jenkins.createProject(WorkflowJob.class, "p");
+                p.setDefinition(new CpsScmFlowDefinition(new jenkins.plugins.git.GitStep(sampleGitRepo.toString()).createSCM(), "Jenkinsfile"));
+
+                r.j.createOnlineSlave(Label.get("remote"));
+                WorkflowRun b = r.j.assertBuildStatusSuccess(p.scheduleBuild2(0));
+                r.j.assertLogContains("GIT_COMMIT is " + commitHash, b);
+            }
+        });
+    }
 
     @Issue("JENKINS-26761")
     @Test public void checkoutsRestored() throws Exception {

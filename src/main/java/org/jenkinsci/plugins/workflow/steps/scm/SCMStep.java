@@ -84,7 +84,7 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
         protected Map<String,String> run() throws Exception {
             step.checkout(run, workspace, listener, launcher);
             Map<String,String> envVars = new TreeMap<>();
-            step.createSCM().buildEnvVars(run, envVars);
+            step.createSCM().buildEnvironment(run, envVars);
             return envVars;
         }
 

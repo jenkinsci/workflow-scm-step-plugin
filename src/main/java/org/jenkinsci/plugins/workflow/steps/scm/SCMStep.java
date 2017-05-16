@@ -92,11 +92,6 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
     }
 
     public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
-        doCheckout(createSCM(), isChangelog(), isPoll(), run, workspace, listener, launcher);
-    }
-
-    static final void doCheckout(SCM scm, boolean changelog, boolean poll,
-                                      Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
             File changelogFile = null;
             if (changelog) {
                 for (int i = 0; ; i++) {
@@ -106,6 +101,7 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
                     }
                 }
             }
+            SCM scm = createSCM();
             SCMRevisionState baseline = null;
             Run<?,?> prev = run.getPreviousBuild();
             if (prev != null) {

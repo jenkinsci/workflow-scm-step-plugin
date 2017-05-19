@@ -33,7 +33,7 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
-import jenkins.plugins.git.*;
+import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.impl.subversion.SubversionSampleRepoRule;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;

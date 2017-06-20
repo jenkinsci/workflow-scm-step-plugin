@@ -6,6 +6,17 @@
     and check if it is shown in the list below.
     Then select the SCM to use from the dropdown list and configure it as needed.
     </p>
+    <p>This step returns a <code>Map</code> of any variables the SCM plugin would
+    set in a Freestyle job, so if your SCM is git, you can do:
+    </p>
+    <pre>
+        def scmVars = checkout scm
+        def commitHash = scmVars.GIT_COMMIT
+
+        // or
+
+        def commitHash = checkout(scm).GIT_COMMIT
+    </pre>
     <p>
     Any other specific step to run checkouts (like <code>svn</code> or <code>git</code>)
     are simplistic options of this step.

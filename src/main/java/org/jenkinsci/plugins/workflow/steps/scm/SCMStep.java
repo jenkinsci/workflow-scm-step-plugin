@@ -34,6 +34,8 @@ import hudson.scm.SCMRevisionState;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
@@ -70,7 +72,7 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
 
     protected abstract @Nonnull SCM createSCM();
 
-    public static final class StepExecutionImpl extends AbstractSynchronousNonBlockingStepExecution<Void> {
+    public static final class StepExecutionImpl extends AbstractSynchronousNonBlockingStepExecution<Map<String,String>> {
 
         @Inject private transient SCMStep step;
         @StepContextParameter private transient Run<?,?> run;
@@ -79,9 +81,11 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
         @StepContextParameter private transient Launcher launcher;
 
         @Override
-        protected Void run() throws Exception {
+        protected Map<String,String> run() throws Exception {
             step.checkout(run, workspace, listener, launcher);
-            return null;
+            Map<String,String> envVars = new TreeMap<>();
+            step.createSCM().buildEnvironment(run, envVars);
+            return envVars;
         }
 
         private static final long serialVersionUID = 1L;

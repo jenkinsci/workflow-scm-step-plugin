@@ -42,8 +42,8 @@
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
         <scm-api-plugin.version>2.1.1</scm-api-plugin.version>
-        <git-plugin.version>3.3.1-20170518.175415-4</git-plugin.version> <!-- TODO: Switch to release once https://github.com/jenkinsci/git-plugin/pull/492 is merged and released -->
-        <subversion-plugin.version>2.7.2</subversion-plugin.version>
+        <git-plugin.version>3.3.0</git-plugin.version>
+        <subversion-plugin.version>2.8</subversion-plugin.version>
     </properties>
     <dependencies>
         <dependency>

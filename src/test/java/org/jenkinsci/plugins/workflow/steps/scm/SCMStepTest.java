@@ -62,20 +62,20 @@ public class SCMStepTest {
     public void scmVars() throws Exception {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                sampleGitRepo.init();
-                sampleGitRepo.write("Jenkinsfile", "node('remote') {\n" +
-                        "    def gitCommit = checkout(scm).GIT_COMMIT\n" +
-                        "    echo \"GIT_COMMIT is ${gitCommit}\"\n" +
+                sampleSvnRepo.init();
+                sampleSvnRepo.write("Jenkinsfile", "node('remote') {\n" +
+                        "    def svnRev = checkout(scm).SVN_REVISION\n" +
+                        "    echo \"SVN_REVISION is ${svnRev}\"\n" +
                         "}\n");
-                sampleGitRepo.git("add", "Jenkinsfile");
-                sampleGitRepo.git("commit", "--message=files");
-                String commitHash = sampleGitRepo.head();
+                sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/Jenkinsfile");
+                sampleSvnRepo.svnkit("commit", "--message=+Jenkinsfile", sampleSvnRepo.wc());
+                long revision = sampleSvnRepo.revision();
                 WorkflowJob p = r.j.jenkins.createProject(WorkflowJob.class, "p");
-                p.setDefinition(new CpsScmFlowDefinition(new jenkins.plugins.git.GitStep(sampleGitRepo.toString()).createSCM(), "Jenkinsfile"));
+                p.setDefinition(new CpsScmFlowDefinition(new SubversionStep(sampleSvnRepo.trunkUrl()).createSCM(), "Jenkinsfile"));
 
                 r.j.createOnlineSlave(Label.get("remote"));
                 WorkflowRun b = r.j.assertBuildStatusSuccess(p.scheduleBuild2(0));
-                r.j.assertLogContains("GIT_COMMIT is " + commitHash, b);
+                r.j.assertLogContains("SVN_REVISION is " + revision, b);
             }
         });
     }

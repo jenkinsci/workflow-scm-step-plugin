@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.workflow.steps.scm;
 
+import com.google.common.collect.ImmutableSet;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
@@ -31,25 +32,22 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
-
 import java.io.File;
-import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
-
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * A step which uses some kind of {@link SCM}.
  */
-public abstract class SCMStep extends AbstractStepImpl implements Serializable {
+public abstract class SCMStep extends Step {
 
     private boolean poll = true;
     private boolean changelog = true;
@@ -70,19 +68,26 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
         this.changelog = changelog;
     }
 
+    @Override public StepExecution start(StepContext context) throws Exception {
+        return new StepExecutionImpl(this, context);
+    }
+
     protected abstract @Nonnull SCM createSCM();
 
-    public static final class StepExecutionImpl extends AbstractSynchronousNonBlockingStepExecution<Map<String,String>> {
+    public static final class StepExecutionImpl extends SynchronousNonBlockingStepExecution<Map<String,String>> {
 
-        @Inject private transient SCMStep step;
-        @StepContextParameter private transient Run<?,?> run;
-        @StepContextParameter private transient FilePath workspace;
-        @StepContextParameter private transient TaskListener listener;
-        @StepContextParameter private transient Launcher launcher;
+        private transient final SCMStep step;
+
+        StepExecutionImpl(SCMStep step, StepContext context) {
+            super(context);
+            this.step = step;
+        }
 
         @Override
         protected Map<String,String> run() throws Exception {
-            step.checkout(run, workspace, listener, launcher);
+            StepContext ctx = getContext();
+            Run<?, ?> run = ctx.get(Run.class);
+            step.checkout(run, ctx.get(FilePath.class), ctx.get(TaskListener.class), ctx.get(Launcher.class));
             Map<String,String> envVars = new TreeMap<>();
             step.createSCM().buildEnvironment(run, envVars);
             return envVars;
@@ -127,16 +132,14 @@ public abstract class SCMStep extends AbstractStepImpl implements Serializable {
                 l.onCheckout(run, scm, workspace, listener, changelogFile, pollingBaseline);
             }
             scm.postCheckout(run, launcher, workspace, listener);
-            // TODO should we call buildEnvVars and return the result?
     }
 
-    public static abstract class SCMStepDescriptor extends AbstractStepDescriptorImpl {
+    public static abstract class SCMStepDescriptor extends StepDescriptor {
 
-        protected SCMStepDescriptor() {
-            super(StepExecutionImpl.class);
+        @Override public Set<? extends Class<?>> getRequiredContext() {
+            return ImmutableSet.of(Run.class, FilePath.class, TaskListener.class, Launcher.class);
         }
 
     }
 
-    private static final long serialVersionUID = 1L;
 }

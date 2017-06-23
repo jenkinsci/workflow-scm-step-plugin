@@ -93,7 +93,7 @@ public class SCMStepTest {
                     "    ws {\n" +
                     "        git($/" + sampleGitRepo + "/$)\n" +
                     "    }\n" +
-                    "}"));
+                    "}", true));
                 p.save();
                 WorkflowRun b = r.j.assertBuildStatusSuccess(p.scheduleBuild2(0));
                 r.j.assertLogContains("Cloning the remote Git repository", b);
@@ -134,7 +134,7 @@ public class SCMStepTest {
                 p.setDefinition(new CpsFlowDefinition(
                     "semaphore 'before'\n" +
                     "node {svn '" + sampleSvnRepo.trunkUrl() + "'}\n" +
-                    "semaphore 'after'"));
+                    "semaphore 'after'", true));
                 assertPolling(p, PollingResult.Change.INCOMPARABLE);
                 WorkflowRun b1 = p.scheduleBuild2(0).waitForStart();
                 SemaphoreStep.success("before/1", null);

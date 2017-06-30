@@ -1,4 +1,6 @@
-<div>
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<div xmlns:j="jelly:core" xmlns:st="jelly:stapler">
     <p>
     This is a special step that allows to run checkouts using any configuration
     options offered by any Pipeline-compatible SCM plugin.
@@ -17,6 +19,15 @@
 
         def commitHash = checkout(scm).GIT_COMMIT
     </pre>
+    <p>
+        Specific variables advertised by installed plugins:
+    </p>
+    <!-- Cf.  EnvironmentContributor/EnvVarsHtml/index.groovy -->
+    <dl class="env-vars">
+      <j:forEach var="d" items="${app.getDescriptor('org.jenkinsci.plugins.workflow.steps.scm.GenericSCMStep').applicableDescriptors}">
+          <st:include class="${d.clazz}" page="buildEnv" optional="true"/>
+      </j:forEach>
+    </dl>
     <p>
     Any other specific step to run checkouts (like <code>svn</code> or <code>git</code>)
     are simplistic options of this step.

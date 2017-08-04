@@ -45,7 +45,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
@@ -53,110 +52,101 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 public class SCMStepTest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
+    @Rule public RestartableJenkinsRule rr = new RestartableJenkinsRule();
     @Rule public GitSampleRepoRule sampleGitRepo = new GitSampleRepoRule();
     @Rule public SubversionSampleRepoRule sampleSvnRepo = new SubversionSampleRepoRule();
 
     @Issue("JENKINS-26100")
     @Test
     public void scmVars() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                sampleSvnRepo.init();
-                sampleSvnRepo.write("Jenkinsfile", "node('remote') {\n" +
-                        "    def svnRev = checkout(scm).SVN_REVISION\n" +
-                        "    echo \"SVN_REVISION is ${svnRev}\"\n" +
-                        "}\n");
-                sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/Jenkinsfile");
-                sampleSvnRepo.svnkit("commit", "--message=+Jenkinsfile", sampleSvnRepo.wc());
-                long revision = sampleSvnRepo.revision();
-                WorkflowJob p = r.j.jenkins.createProject(WorkflowJob.class, "p");
-                p.setDefinition(new CpsScmFlowDefinition(new SubversionStep(sampleSvnRepo.trunkUrl()).createSCM(), "Jenkinsfile"));
-
-                r.j.createOnlineSlave(Label.get("remote"));
-                WorkflowRun b = r.j.assertBuildStatusSuccess(p.scheduleBuild2(0));
-                r.j.assertLogContains("SVN_REVISION is " + revision, b);
-            }
+        rr.then(r -> {
+            sampleSvnRepo.init();
+            sampleSvnRepo.write("Jenkinsfile", "node('remote') {\n" +
+                "    def svnRev = checkout(scm).SVN_REVISION\n" +
+                "    echo \"SVN_REVISION is ${svnRev}\"\n" +
+                "}\n");
+            sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/Jenkinsfile");
+            sampleSvnRepo.svnkit("commit", "--message=+Jenkinsfile", sampleSvnRepo.wc());
+            long revision = sampleSvnRepo.revision();
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsScmFlowDefinition(new SubversionStep(sampleSvnRepo.trunkUrl()).createSCM(), "Jenkinsfile"));
+            r.createOnlineSlave(Label.get("remote"));
+            WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+            r.assertLogContains("SVN_REVISION is " + revision, b);
         });
     }
 
     @Issue("JENKINS-26761")
     @Test public void checkoutsRestored() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                sampleGitRepo.init();
-                WorkflowJob p = r.j.jenkins.createProject(WorkflowJob.class, "p");
-                p.addTrigger(new SCMTrigger(""));
-                r.j.createOnlineSlave(Label.get("remote"));
-                p.setDefinition(new CpsFlowDefinition(
-                    "node('remote') {\n" +
-                    "    ws {\n" +
-                    "        git($/" + sampleGitRepo + "/$)\n" +
-                    "    }\n" +
-                    "}", true));
-                p.save();
-                WorkflowRun b = r.j.assertBuildStatusSuccess(p.scheduleBuild2(0));
-                r.j.assertLogContains("Cloning the remote Git repository", b);
-                FileUtils.copyFile(new File(b.getRootDir(), "build.xml"), System.out);
-            }
+        rr.then(r -> {
+            sampleGitRepo.init();
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.addTrigger(new SCMTrigger(""));
+            r.createOnlineSlave(Label.get("remote"));
+            p.setDefinition(new CpsFlowDefinition(
+                "node('remote') {\n" +
+                "    ws {\n" +
+                "        git($/" + sampleGitRepo + "/$)\n" +
+                "    }\n" +
+                "}", true));
+            p.save();
+            WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+            r.assertLogContains("Cloning the remote Git repository", b);
+            FileUtils.copyFile(new File(b.getRootDir(), "build.xml"), System.out);
         });
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                WorkflowJob p = r.j.jenkins.getItemByFullName("p", WorkflowJob.class);
-                r.j.createOnlineSlave(Label.get("remote"));
-                sampleGitRepo.write("nextfile", "");
-                sampleGitRepo.git("add", "nextfile");
-                sampleGitRepo.git("commit", "--message=next");
-                sampleGitRepo.notifyCommit(r.j);
-                WorkflowRun b = p.getLastBuild();
-                assertEquals(2, b.number);
-                r.j.assertLogContains("Cloning the remote Git repository", b); // new slave, new workspace
-                List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = b.getChangeSets();
-                assertEquals(1, changeSets.size());
-                ChangeLogSet<? extends ChangeLogSet.Entry> changeSet = changeSets.get(0);
-                assertEquals(b, changeSet.getRun());
-                assertEquals("git", changeSet.getKind());
-                Iterator<? extends ChangeLogSet.Entry> iterator = changeSet.iterator();
-                assertTrue(iterator.hasNext());
-                ChangeLogSet.Entry entry = iterator.next();
-                assertEquals("[nextfile]", entry.getAffectedPaths().toString());
-                assertFalse(iterator.hasNext());
-            }
+        rr.then(r -> {
+            WorkflowJob p = r.jenkins.getItemByFullName("p", WorkflowJob.class);
+            r.createOnlineSlave(Label.get("remote"));
+            sampleGitRepo.write("nextfile", "");
+            sampleGitRepo.git("add", "nextfile");
+            sampleGitRepo.git("commit", "--message=next");
+            sampleGitRepo.notifyCommit(r);
+            WorkflowRun b = p.getLastBuild();
+            assertEquals(2, b.number);
+            r.assertLogContains("Cloning the remote Git repository", b); // new slave, new workspace
+            List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = b.getChangeSets();
+            assertEquals(1, changeSets.size());
+            ChangeLogSet<? extends ChangeLogSet.Entry> changeSet = changeSets.get(0);
+            assertEquals(b, changeSet.getRun());
+            assertEquals("git", changeSet.getKind());
+            Iterator<? extends ChangeLogSet.Entry> iterator = changeSet.iterator();
+            assertTrue(iterator.hasNext());
+            ChangeLogSet.Entry entry = iterator.next();
+            assertEquals("[nextfile]", entry.getAffectedPaths().toString());
+            assertFalse(iterator.hasNext());
         });
     }
 
     @Issue("JENKINS-32214")
     @Test public void pollDuringBuild() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                sampleSvnRepo.init();
-                WorkflowJob p = r.j.jenkins.createProject(WorkflowJob.class, "p");
-                p.setDefinition(new CpsFlowDefinition(
-                    "semaphore 'before'\n" +
-                    "node {svn '" + sampleSvnRepo.trunkUrl() + "'}\n" +
-                    "semaphore 'after'", true));
-                assertPolling(p, PollingResult.Change.INCOMPARABLE);
-                WorkflowRun b1 = p.scheduleBuild2(0).waitForStart();
-                SemaphoreStep.success("before/1", null);
-                SemaphoreStep.waitForStart("after/1", b1);
-                assertPolling(p, PollingResult.Change.NONE);
-                SemaphoreStep.success("after/1", null);
-                r.j.assertBuildStatusSuccess(r.j.waitForCompletion(b1));
-                sampleSvnRepo.write("file2", "");
-                sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file2");
-                sampleSvnRepo.svnkit("commit", "--message=+file2", sampleSvnRepo.wc());
-                WorkflowRun b2 = p.scheduleBuild2(0).waitForStart();
-                SemaphoreStep.success("before/2", null);
-                SemaphoreStep.waitForStart("after/2", b2);
-                assertPolling(p, PollingResult.Change.NONE);
-                WorkflowRun b3 = p.scheduleBuild2(0).waitForStart();
-                SemaphoreStep.waitForStart("before/3", b3);
-                assertPolling(p, PollingResult.Change.NONE);
-                sampleSvnRepo.write("file3", "");
-                sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file3");
-                sampleSvnRepo.svnkit("commit", "--message=+file3", sampleSvnRepo.wc());
-                assertPolling(p, PollingResult.Change.SIGNIFICANT);
-            }
+        rr.then(r -> {
+            sampleSvnRepo.init();
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                "semaphore 'before'\n" +
+                "node {svn '" + sampleSvnRepo.trunkUrl() + "'}\n" +
+                "semaphore 'after'", true));
+            assertPolling(p, PollingResult.Change.INCOMPARABLE);
+            WorkflowRun b1 = p.scheduleBuild2(0).waitForStart();
+            SemaphoreStep.success("before/1", null);
+            SemaphoreStep.waitForStart("after/1", b1);
+            assertPolling(p, PollingResult.Change.NONE);
+            SemaphoreStep.success("after/1", null);
+            r.assertBuildStatusSuccess(r.waitForCompletion(b1));
+            sampleSvnRepo.write("file2", "");
+            sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file2");
+            sampleSvnRepo.svnkit("commit", "--message=+file2", sampleSvnRepo.wc());
+            WorkflowRun b2 = p.scheduleBuild2(0).waitForStart();
+            SemaphoreStep.success("before/2", null);
+            SemaphoreStep.waitForStart("after/2", b2);
+            assertPolling(p, PollingResult.Change.NONE);
+            WorkflowRun b3 = p.scheduleBuild2(0).waitForStart();
+            SemaphoreStep.waitForStart("before/3", b3);
+            assertPolling(p, PollingResult.Change.NONE);
+            sampleSvnRepo.write("file3", "");
+            sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file3");
+            sampleSvnRepo.svnkit("commit", "--message=+file3", sampleSvnRepo.wc());
+            assertPolling(p, PollingResult.Change.SIGNIFICANT);
         });
     }
     private static void assertPolling(WorkflowJob p, PollingResult.Change expectedChange) {

@@ -58,7 +58,7 @@ public final class GenericSCMStep extends SCMStep {
         }
 
         @Override public String getDisplayName() {
-            return "General SCM";
+            return "Check out from version control";
         }
 
         public Collection<? extends SCMDescriptor<?>> getApplicableDescriptors() {

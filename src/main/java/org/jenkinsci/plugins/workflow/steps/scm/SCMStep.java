@@ -33,9 +33,9 @@ import hudson.model.listeners.SCMListener;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -88,7 +88,7 @@ public abstract class SCMStep extends Step {
             StepContext ctx = getContext();
             Run<?, ?> run = ctx.get(Run.class);
             step.checkout(run, ctx.get(FilePath.class), ctx.get(TaskListener.class), ctx.get(Launcher.class));
-            Map<String,String> envVars = new TreeMap<>();
+            Map<String,String> envVars = new HashMap<>();
             step.createSCM().buildEnvironment(run, envVars);
             return envVars;
         }

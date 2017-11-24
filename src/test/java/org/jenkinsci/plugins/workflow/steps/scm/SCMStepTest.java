@@ -76,6 +76,29 @@ public class SCMStepTest {
         });
     }
 
+    @Issue("JENKINS-46597")
+    @Test
+    public void scmVarMapIsSerializable() throws Exception {
+        rr.then(r -> {
+            sampleSvnRepo.init();
+            sampleSvnRepo.write("Jenkinsfile", "node('remote') {\n" +
+                    "    def svnVars = checkout(scm)\n" +
+                    "    svnVars.each { e ->\n" +
+                    "        sleep(1)\n" +
+                    "        echo \"${e.key} is ${e.value}\"\n" +
+                    "    }\n" +
+                    "}\n");
+            sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/Jenkinsfile");
+            sampleSvnRepo.svnkit("commit", "--message=+Jenkinsfile", sampleSvnRepo.wc());
+            long revision = sampleSvnRepo.revision();
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsScmFlowDefinition(new SubversionStep(sampleSvnRepo.trunkUrl()).createSCM(), "Jenkinsfile"));
+            r.createOnlineSlave(Label.get("remote"));
+            WorkflowRun b = r.buildAndAssertSuccess(p);
+            r.assertLogContains("SVN_REVISION is " + revision, b);
+        });
+    }
+
     @Issue("JENKINS-26761")
     @Test public void checkoutsRestored() throws Exception {
         rr.then(r -> {

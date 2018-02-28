@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.workflow.steps.scm;
 
 import com.google.common.collect.ImmutableSet;
+
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
@@ -51,6 +52,7 @@ public abstract class SCMStep extends Step {
 
     private boolean poll = true;
     private boolean changelog = true;
+    private String changelogEnv = "CHANGE_LOG";
 
     public boolean isPoll() {
         return poll;
@@ -68,7 +70,15 @@ public abstract class SCMStep extends Step {
         this.changelog = changelog;
     }
 
-    @Override public StepExecution start(StepContext context) throws Exception {
+	public String getChangelogEnv() {
+		return changelogEnv;
+	}
+
+	@DataBoundSetter public void setChangelogEnv(String changelogEnv) {
+		this.changelogEnv = changelogEnv;
+	}
+
+	@Override public StepExecution start(StepContext context) throws Exception {
         return new StepExecutionImpl(this, context);
     }
 
@@ -87,8 +97,10 @@ public abstract class SCMStep extends Step {
         protected Map<String,String> run() throws Exception {
             StepContext ctx = getContext();
             Run<?, ?> run = ctx.get(Run.class);
-            step.checkout(run, ctx.get(FilePath.class), ctx.get(TaskListener.class), ctx.get(Launcher.class));
             Map<String,String> envVars = new TreeMap<>();
+
+            step.checkout(run, envVars, ctx.get(FilePath.class), ctx.get(TaskListener.class), ctx.get(Launcher.class));
+            
             step.createSCM().buildEnvironment(run, envVars);
             return envVars;
         }
@@ -96,7 +108,7 @@ public abstract class SCMStep extends Step {
         private static final long serialVersionUID = 1L;
     }
 
-    public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
+    public final void checkout(Run<?,?> run, Map<String,String> envVars, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
             File changelogFile = null;
             if (changelog) {
                 for (int i = 0; ; i++) {
@@ -105,7 +117,11 @@ public abstract class SCMStep extends Step {
                         break;
                     }
                 }
+                
+                // export changeLogFile name to env
+                envVars.put(getChangelogEnv(), changelogFile.getName());
             }
+            
             SCM scm = createSCM();
             SCMRevisionState baseline = null;
             Run<?,?> prev = run.getPreviousBuild();

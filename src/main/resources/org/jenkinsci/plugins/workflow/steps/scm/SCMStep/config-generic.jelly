@@ -29,6 +29,9 @@ THE SOFTWARE.
         <f:checkbox title="Include in polling?" default="true"/>
     </f:entry>
     <f:entry field="changelog">
-        <f:checkbox title="Include in changelog?" default="true"/>
+        <f:checkbox title="${%Include in changelog?}" default="true"/>
+    </f:entry>
+    <f:entry field="changelogEnv" title="${%ChangelogEnv}">
+    	<f:textbox default="CHANGE_LOG"/>
     </f:entry>
 </j:jelly>

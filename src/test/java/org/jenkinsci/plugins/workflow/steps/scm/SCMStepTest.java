@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.workflow.steps.scm;
 import hudson.model.Label;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
+import hudson.scm.SubversionSCM;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 import java.io.File;
@@ -69,7 +70,7 @@ public class SCMStepTest {
             sampleSvnRepo.svnkit("commit", "--message=+Jenkinsfile", sampleSvnRepo.wc());
             long revision = sampleSvnRepo.revision();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
-            p.setDefinition(new CpsScmFlowDefinition(new SubversionStep(sampleSvnRepo.trunkUrl()).createSCM(), "Jenkinsfile"));
+            p.setDefinition(new CpsScmFlowDefinition(new SubversionSCM(sampleSvnRepo.trunkUrl()), "Jenkinsfile"));
             r.createOnlineSlave(Label.get("remote"));
             WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
             r.assertLogContains("SVN_REVISION is " + revision, b);

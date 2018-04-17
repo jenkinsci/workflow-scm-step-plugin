@@ -40,12 +40,26 @@
     <properties>
         <jenkins.version>2.60</jenkins.version>
         <java.level>8</java.level>
-        <scm-api-plugin.version>2.2.0</scm-api-plugin.version>
+        <scm-api-plugin.version>2.2.6</scm-api-plugin.version>
         <git-plugin.version>3.6.0</git-plugin.version>
-        <subversion-plugin.version>2.8</subversion-plugin.version>
+        <subversion-plugin.version>2.10.5</subversion-plugin.version>
         <workflow-step-api-plugin.version>2.9</workflow-step-api-plugin.version>
         <workflow-support-plugin.version>2.14</workflow-support-plugin.version>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jenkins-ci.plugins</groupId>
+                <artifactId>credentials</artifactId>
+                <version>2.1.15</version>
+            </dependency>
+            <dependency>
+                <groupId>org.tmatesoft.svnkit</groupId>
+                <artifactId>svnkit</artifactId>
+                <version>1.9.2</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -79,6 +93,10 @@
                     <groupId>org.jenkins-ci</groupId>
                     <artifactId>annotation-indexer</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+                    <artifactId>workflow-scm-step</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -92,6 +110,10 @@
                     <groupId>org.jenkins-ci</groupId>
                     <artifactId>annotation-indexer</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+                    <artifactId>workflow-scm-step</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -99,6 +121,12 @@
             <artifactId>subversion</artifactId>
             <version>${subversion-plugin.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+                    <artifactId>workflow-scm-step</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -106,11 +134,17 @@
             <version>${subversion-plugin.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+                    <artifactId>workflow-scm-step</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit-cli</artifactId>
-            <version>1.8.14</version>
+            <version>1.9.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -125,12 +159,24 @@
             <artifactId>workflow-cps</artifactId>
             <version>2.29</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+                    <artifactId>workflow-scm-step</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-multibranch</artifactId>
             <version>2.14</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+                    <artifactId>workflow-scm-step</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>

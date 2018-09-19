@@ -84,6 +84,15 @@ public abstract class SCMStep extends Step {
         }
 
         @Override
+        public void onResume() {
+            try {
+                run();
+            } catch (Exception ex) {
+                getContext().onFailure(new Exception("Failed to try to re-run checkout on restart", ex));
+            }
+        }
+
+        @Override
         protected Map<String,String> run() throws Exception {
             StepContext ctx = getContext();
             Run<?, ?> run = ctx.get(Run.class);

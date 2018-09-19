@@ -86,7 +86,11 @@ public abstract class SCMStep extends Step {
         @Override
         public void onResume() {
             try {
+                // TODO try to remove previous MultiSCMRevisionState entry from build for this checkout?
+                // BUT that should be replaced by the new checkout since it will
+                // Changelog.xml file update
                 run();
+                // Note: we might need to remove previous SCM Checkout info
             } catch (Exception ex) {
                 getContext().onFailure(new Exception("Failed to try to re-run checkout on restart", ex));
             }

@@ -5,3 +5,6 @@ work
 .classpath
 .project
 .settings
+
+# Project
+*.iml

@@ -4,12 +4,12 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.36</version>
+        <version>3.21</version>
         <relativePath />
     </parent>
     <groupId>org.jenkins-ci.plugins.workflow</groupId>
     <artifactId>workflow-scm-step</artifactId>
-    <version>2.7-SNAPSHOT</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>Pipeline: SCM Step</name>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+SCM+Step+Plugin</url>
@@ -23,8 +23,8 @@
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>${scmTag}</tag>
+    </scm>
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
@@ -38,6 +38,8 @@
         </pluginRepository>
     </pluginRepositories>
     <properties>
+        <revision>2.7</revision>
+        <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.60</jenkins.version>
         <java.level>8</java.level>
         <scm-api-plugin.version>2.2.6</scm-api-plugin.version>

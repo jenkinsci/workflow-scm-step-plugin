@@ -26,8 +26,8 @@ package org.jenkinsci.plugins.workflow.steps.scm;
 
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -41,7 +41,7 @@ final class MultiSCMRevisionState extends SCMRevisionState {
 	private final Map<String,SCMRevisionState> revisionStates;
 
 	MultiSCMRevisionState() {
-		revisionStates = new HashMap<String, SCMRevisionState>();
+		revisionStates = new ConcurrentHashMap<String, SCMRevisionState>();
 	}
 
 	public void add(@Nonnull SCM scm, @Nonnull SCMRevisionState scmState) {

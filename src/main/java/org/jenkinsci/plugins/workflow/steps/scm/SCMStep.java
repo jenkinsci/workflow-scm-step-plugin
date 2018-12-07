@@ -101,7 +101,7 @@ public abstract class SCMStep extends Step {
             if (changelog) {
                 for (int i = 0; ; i++) {
                     changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
-                    if (!changelogFile.exists()) {
+                    if (changelogFile.createNewFile()) {
                         break;
                     }
                 }

@@ -97,15 +97,6 @@ public abstract class SCMStep extends Step {
     }
 
     public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
-            File changelogFile = null;
-            if (changelog) {
-                for (int i = 0; ; i++) {
-                    changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
-                    if (!changelogFile.exists()) {
-                        break;
-                    }
-                }
-            }
             SCM scm = createSCM();
             SCMRevisionState baseline = null;
             Run<?,?> prev = run.getPreviousBuild();
@@ -117,7 +108,18 @@ public abstract class SCMStep extends Step {
                 }
                 }
             }
-            scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
+            File changelogFile = null;
+            synchronized (run) {
+                if (changelog) {
+                    for (int i = 0; ; i++) {
+                        changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
+                        if (!changelogFile.exists()) {
+                            break;
+                        }
+                    }
+                }
+                scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
+            }
             SCMRevisionState pollingBaseline = null;
             if (poll || changelog) {
                 pollingBaseline = scm.calcRevisionsFromBuild(run, workspace, launcher, listener);

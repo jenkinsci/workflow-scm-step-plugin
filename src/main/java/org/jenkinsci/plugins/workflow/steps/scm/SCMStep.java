@@ -33,6 +33,7 @@ import hudson.model.listeners.SCMListener;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -97,6 +98,12 @@ public abstract class SCMStep extends Step {
     }
 
     public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
+            File tempChangelogFile = null;
+            if (changelog) {
+                // We use a temp file so that any failures during the checkout do not leave invalid files in the build directory.
+                tempChangelogFile = Files.createTempFile("changelog", ".xml").toFile();
+                tempChangelogFile.deleteOnExit();
+            }
             SCM scm = createSCM();
             SCMRevisionState baseline = null;
             Run<?,?> prev = run.getPreviousBuild();
@@ -108,17 +115,20 @@ public abstract class SCMStep extends Step {
                 }
                 }
             }
+            scm.checkout(run, launcher, workspace, listener, tempChangelogFile, baseline);
             File changelogFile = null;
-            synchronized (run) {
-                if (changelog) {
+            if (changelog) {
+                // Now that the checkout succeeded, we copy the changelog into the build directory, synchronizing on
+                // `run` to make sure the file we choose is unique to this call to checkout.
+                synchronized (run) {
                     for (int i = 0; ; i++) {
                         changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
                         if (!changelogFile.exists()) {
+                            Files.copy(tempChangelogFile.toPath(), changelogFile.toPath());
                             break;
                         }
                     }
                 }
-                scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
             }
             SCMRevisionState pollingBaseline = null;
             if (poll || changelog) {

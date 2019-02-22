@@ -99,10 +99,13 @@ public abstract class SCMStep extends Step {
     public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
             File changelogFile = null;
             if (changelog) {
-                for (int i = 0; ; i++) {
-                    changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
-                    if (!changelogFile.exists()) {
-                        break;
+                synchronized (run) {
+                    for (int i = 0; ; i++) {
+                        changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
+                        if (!changelogFile.exists()) {
+                            changelogFile.createNewFile();
+                            break;
+                        }
                     }
                 }
             }

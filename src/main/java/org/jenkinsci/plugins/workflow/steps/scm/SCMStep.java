@@ -98,11 +98,11 @@ public abstract class SCMStep extends Step {
     }
 
     public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
-            File tempChangelogFile = null;
+        File tempChangelogFile = null;
+        try {
             if (changelog) {
                 // We use a temp file so that any failures during the checkout do not leave invalid files in the build directory.
                 tempChangelogFile = Files.createTempFile("changelog", ".xml").toFile();
-                tempChangelogFile.deleteOnExit();
             }
             SCM scm = createSCM();
             SCMRevisionState baseline = null;
@@ -124,7 +124,7 @@ public abstract class SCMStep extends Step {
                     for (int i = 0; ; i++) {
                         changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
                         if (!changelogFile.exists()) {
-                            Files.copy(tempChangelogFile.toPath(), changelogFile.toPath());
+                            Files.move(tempChangelogFile.toPath(), changelogFile.toPath());
                             break;
                         }
                     }
@@ -148,6 +148,11 @@ public abstract class SCMStep extends Step {
                 l.onCheckout(run, scm, workspace, listener, changelogFile, pollingBaseline);
             }
             scm.postCheckout(run, launcher, workspace, listener);
+        } finally {
+            if (tempChangelogFile != null) {
+                Files.deleteIfExists(tempChangelogFile.toPath());
+            }
+        }
     }
 
     public static abstract class SCMStepDescriptor extends StepDescriptor {

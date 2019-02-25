@@ -34,7 +34,6 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -99,11 +98,11 @@ public abstract class SCMStep extends Step {
     }
 
     public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
-        Path tempChangelogFile = null;
+        File tempChangelogFile = null;
         try {
             if (changelog) {
                 // We use a temp file so that any failures during the checkout do not leave invalid files in the build directory.
-                tempChangelogFile = Files.createTempFile("changelog", ".xml");
+                tempChangelogFile = Files.createTempFile("changelog", ".xml").toFile();
             }
             SCM scm = createSCM();
             SCMRevisionState baseline = null;
@@ -116,7 +115,7 @@ public abstract class SCMStep extends Step {
                 }
                 }
             }
-            scm.checkout(run, launcher, workspace, listener, tempChangelogFile.toFile(), baseline);
+            scm.checkout(run, launcher, workspace, listener, tempChangelogFile, baseline);
             File changelogFile = null;
             if (changelog) {
                 // Now that the checkout succeeded, we copy the changelog into the build directory, synchronizing on
@@ -125,7 +124,7 @@ public abstract class SCMStep extends Step {
                     for (int i = 0; ; i++) {
                         changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
                         if (!changelogFile.exists()) {
-                            Files.move(tempChangelogFile, changelogFile.toPath());
+                            Files.move(tempChangelogFile.toPath(), changelogFile.toPath());
                             break;
                         }
                     }
@@ -151,7 +150,7 @@ public abstract class SCMStep extends Step {
             scm.postCheckout(run, launcher, workspace, listener);
         } finally {
             if (tempChangelogFile != null) {
-                Files.deleteIfExists(tempChangelogFile);
+                Files.deleteIfExists(tempChangelogFile.toPath());
             }
         }
     }

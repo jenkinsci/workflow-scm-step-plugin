@@ -98,11 +98,10 @@ public abstract class SCMStep extends Step {
     }
 
     public final void checkout(Run<?,?> run, FilePath workspace, TaskListener listener, Launcher launcher) throws Exception {
-        File tempChangelogFile = null;
+        File changelogFile = null;
         try {
             if (changelog) {
-                // We use a temp file so that any failures during the checkout do not leave invalid files in the build directory.
-                tempChangelogFile = Files.createTempFile("changelog", ".xml").toFile();
+                changelogFile = Files.createTempFile(run.getRootDir().toPath(), "changelog", ".xml").toFile();
             }
             SCM scm = createSCM();
             SCMRevisionState baseline = null;
@@ -115,21 +114,7 @@ public abstract class SCMStep extends Step {
                 }
                 }
             }
-            scm.checkout(run, launcher, workspace, listener, tempChangelogFile, baseline);
-            File changelogFile = null;
-            if (changelog) {
-                // Now that the checkout succeeded, we copy the changelog into the build directory, synchronizing on
-                // `run` to make sure the file we choose is unique to this call to checkout.
-                synchronized (run) {
-                    for (int i = 0; ; i++) {
-                        changelogFile = new File(run.getRootDir(), "changelog" + i + ".xml");
-                        if (!changelogFile.exists()) {
-                            Files.move(tempChangelogFile.toPath(), changelogFile.toPath());
-                            break;
-                        }
-                    }
-                }
-            }
+            scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
             SCMRevisionState pollingBaseline = null;
             if (poll || changelog) {
                 pollingBaseline = scm.calcRevisionsFromBuild(run, workspace, launcher, listener);
@@ -148,10 +133,12 @@ public abstract class SCMStep extends Step {
                 l.onCheckout(run, scm, workspace, listener, changelogFile, pollingBaseline);
             }
             scm.postCheckout(run, launcher, workspace, listener);
-        } finally {
-            if (tempChangelogFile != null) {
-                Files.deleteIfExists(tempChangelogFile.toPath());
+        } catch (Exception e) {
+            if (changelogFile != null) {
+                // Might as well delete the file in case it is malformed and some other code tries to look at it (although it should be harmless).
+                Files.deleteIfExists(changelogFile.toPath());
             }
+            throw e;
         }
     }
 

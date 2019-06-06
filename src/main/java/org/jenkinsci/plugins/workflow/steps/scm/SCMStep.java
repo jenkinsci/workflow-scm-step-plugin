@@ -33,7 +33,9 @@ import hudson.model.listeners.SCMListener;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -101,7 +103,12 @@ public abstract class SCMStep extends Step {
         File changelogFile = null;
         try {
             if (changelog) {
-                changelogFile = Files.createTempFile(run.getRootDir().toPath(), "changelog", ".xml").toFile();
+                if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+                    changelogFile = Files.createTempFile(run.getRootDir().toPath(), "changelog", ".xml",
+                            PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--"))).toFile();
+                } else {
+                    changelogFile = Files.createTempFile(run.getRootDir().toPath(), "changelog", ".xml").toFile();
+                }
             }
             SCM scm = createSCM();
             SCMRevisionState baseline = null;

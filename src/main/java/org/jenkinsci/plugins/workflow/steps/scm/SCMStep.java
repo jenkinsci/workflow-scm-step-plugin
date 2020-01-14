@@ -122,6 +122,14 @@ public abstract class SCMStep extends Step {
                 }
             }
             scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
+            if (changelogFile != null && changelogFile.length() == 0) {
+                // JENKINS-57918/JENKINS-59560: Some SCM plugins don't write anything to the changelog file in some
+                // cases. `WorkflowRun.onCheckout` asks the SCM to parse the changelog file if it exists, and
+                // attempting to parse an empty file will cause an error, so we delete empty files before they even get
+                // to `WorkflowRun.onCheckout`.
+                Files.deleteIfExists(changelogFile.toPath());
+                changelogFile = null;
+            }
             SCMRevisionState pollingBaseline = null;
             if (poll || changelog) {
                 pollingBaseline = scm.calcRevisionsFromBuild(run, workspace, launcher, listener);

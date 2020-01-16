@@ -24,15 +24,25 @@
 
 package org.jenkinsci.plugins.workflow.steps.scm;
 
+import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.Label;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.scm.ChangeLogParser;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.NullSCM;
 import hudson.scm.PollingResult;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCMRevisionState;
 import hudson.scm.SubversionSCM;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import jenkins.model.Jenkins;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.impl.subversion.SubversionSampleRepoRule;
@@ -49,6 +59,9 @@ import org.junit.Rule;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.xml.sax.SAXException;
 
 public class SCMStepTest {
 
@@ -150,8 +163,39 @@ public class SCMStepTest {
             assertPolling(p, PollingResult.Change.SIGNIFICANT);
         });
     }
+
+    @Issue(value = { "JENKINS-57918", "JENKINS-59560" })
+    @Test public void scmParsesUmodifiedChangelogFile() {
+        rr.then(r -> {
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                "node() {\n" +
+                "  checkout([$class: 'InvalidChangelogSCM'])\n" +
+                "}", true));
+            r.buildAndAssertSuccess(p);
+        });
+    }
+
     private static void assertPolling(WorkflowJob p, PollingResult.Change expectedChange) {
         assertEquals(expectedChange, p.poll(StreamTaskListener.fromStdout()).change);
+    }
+
+    public static class InvalidChangelogSCM extends NullSCM {
+        @DataBoundConstructor
+        public InvalidChangelogSCM() { }
+        @Override public void checkout(Run<?,?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+            // Unlike the superclass, which adds an XML header to the file, we just ignore the file.
+        }
+        @Override public ChangeLogParser createChangeLogParser() {
+            return new ChangeLogParser() {
+                public ChangeLogSet<? extends ChangeLogSet.Entry> parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException, SAXException {
+                    Jenkins.XSTREAM2.fromXML(changelogFile);
+                    throw new AssertionError("The previous line should always fail because the file is empty");
+                }
+            };
+        }
+        @TestExtension("scmParsesUmodifiedChangelogFile")
+        public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
     }
 
 }

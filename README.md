@@ -1,9 +1,15 @@
-# Introduction
+# Pipeline: SCM Step Plugin
+
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/workflow-scm-step)](https://plugins.jenkins.io/workflow-scm-step)
+[![Changelog](https://img.shields.io/github/v/tag/jenkinsci/workflow-scm-step-plugin?label=changelog)](https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/CHANGELOG.md)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/workflow-scm-step?color=blue)](https://plugins.jenkins.io/workflow-scm-step)
+
+## Introduction
 
 This plugin allows pipelines to use standard Jenkins SCM plugins to check out source code.
 The goals are the maximum possible compatibility with existing plugins, and great flexibility for script authors.
 
-# Features
+## Features
 
 A freestyle project has a single SCM configured in the UI that governs the one and only workspace for the build.
 A Pipeline can be configured similarly, but the SCM definition becomes a regular step in its script.
@@ -19,7 +25,7 @@ node {
 Jenkins will clone the repository into the workspace and continue with your script.
 (Subsequent builds will update rather than clone, if the same slave and workspace are available again.)
 
-## Multiple SCMs
+### Multiple SCMs
 
 While freestyle projects can use the Multiple SCMs plugin to check out more than one repository,
 or specify multiple locations in SCM plugins that support that (notably the Git plugin),
@@ -38,7 +44,7 @@ parallel repos.collectEntries {repo -> [/* thread label */repo, {
 }]}
 ```
 
-## Changelogs
+### Changelogs
 
 By default each build will show changes from the previous build in its changelog as usual, and you can see an overall changelog on the project index page.
 You may specify `changelog: false` to disable changelog generation if it is not of interest, or too large to compute efficiently.
@@ -47,7 +53,7 @@ Jenkins will automatically remember the SCMs run in the _last build_ of the proj
 This means that you can run multiple SCMs, even from a dynamic list, and get a reasonable changelog.
 (At least for those checkouts that remain constant from build to build, as identified by a key defined by the SCM plugin, typically based on something like the repository location and branch.)
 
-## Polling
+### Polling
 
 If you configure the _Poll SCM_ trigger in the Pipeline’s UI configuration screen, then by default Jenkins will also poll for changes according to the selected _Schedule_, and schedule new builds automatically if changes are detected.
 (Note that this configuration is not part of the Pipeline script, because it affects activities that Jenkins runs outside of the Pipeline.)
@@ -61,12 +67,12 @@ Polling is supported across multiple SCMs (changes in one or more will trigger a
 
 You may specify `poll: false` to disable polling for an SCM checkout.
 
-# Built-in integrations
+## Built-in integrations
 
 Currently there are special integrations in the Git (`git` step) and Subversion (`svn` step) plugins.
 See those plugins for details.
 
-# Generic SCM step
+## Generic SCM step
 
 The `checkout` step may be used to run any other SCM plugin, provided that it has been brought up to date as described below.
 (See the [compatibility list](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for the list of currently SCMs.)
@@ -101,6 +107,10 @@ This would correspond roughly to a freestyle project whose `config.xml` includes
 
 with no `<hudson.triggers.SCMTrigger>` (polling).
 
-# Supporting Pipeline from an SCM plugin
+## Supporting Pipeline from an SCM plugin
 
 See the [compatibility guide](https://github.com/jenkinsci/pipeline-plugin/blob/master/DEVGUIDE.md#scms).
+
+## Version History
+
+See [the changelog](CHANGELOG.md).

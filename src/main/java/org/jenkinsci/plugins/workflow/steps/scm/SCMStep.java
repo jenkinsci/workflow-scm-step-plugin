@@ -110,19 +110,23 @@ public abstract class SCMStep extends Step {
                     changelogFile = Files.createTempFile(run.getRootDir().toPath(), "changelog", ".xml").toFile();
                 }
             }
+            long changelogOriginalModifiedDate = (changelogFile != null) ? changelogFile.lastModified() : 1L;
             SCM scm = createSCM();
             SCMRevisionState baseline = null;
             Run<?,?> prev = run.getPreviousBuild();
             if (prev != null) {
                 synchronized (prev) {
-                MultiSCMRevisionState state = prev.getAction(MultiSCMRevisionState.class);
-                if (state != null) {
-                    baseline = state.get(scm);
-                }
+                    MultiSCMRevisionState state = prev.getAction(MultiSCMRevisionState.class);
+                    if (state != null) {
+                        baseline = state.get(scm);
+                    }
                 }
             }
             scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
-            if (changelogFile != null && changelogFile.length() == 0) {
+            // If the changelog file has not been changed during the checkout, then we delete it.
+            // This applies to zero-byte files, which exist but are of 0 length, but were modified using a touch
+            // command, such as tests which use org.jvnet.hudson.test.FakeChangeLogSCM.checkout.
+            if (changelogFile.lastModified() == changelogOriginalModifiedDate) {
                 // JENKINS-57918/JENKINS-59560: Some SCM plugins don't write anything to the changelog file in some
                 // cases. `WorkflowRun.onCheckout` asks the SCM to parse the changelog file if it exists, and
                 // attempting to parse an empty file will cause an error, so we delete empty files before they even get

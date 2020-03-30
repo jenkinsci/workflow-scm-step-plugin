@@ -194,7 +194,7 @@ public class SCMStepTest {
                 }
             };
         }
-        @TestExtension("scmParsesUmodifiedChangelogFile")
+        @TestExtension("scmParsesUnmodifiedChangelogFile")
         public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
     }
 

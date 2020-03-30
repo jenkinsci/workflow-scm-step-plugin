@@ -165,7 +165,7 @@ public class SCMStepTest {
     }
 
     @Issue(value = { "JENKINS-57918", "JENKINS-59560" })
-    @Test public void scmParsesUmodifiedChangelogFile() {
+    @Test public void scmParsesUnmodifiedChangelogFile() {
         rr.then(r -> {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(

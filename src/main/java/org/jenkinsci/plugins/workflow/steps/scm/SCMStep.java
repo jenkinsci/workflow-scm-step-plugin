@@ -126,7 +126,7 @@ public abstract class SCMStep extends Step {
             // If the changelog file has not been changed during the checkout, then we delete it.
             // This applies to zero-byte files, which exist but are of 0 length, but were modified using a touch
             // command, such as tests which use org.jvnet.hudson.test.FakeChangeLogSCM.checkout.
-            if (changelogFile.lastModified() == changelogOriginalModifiedDate) {
+            if (changelogFile != null && changelogFile.lastModified() == changelogOriginalModifiedDate) {
                 // JENKINS-57918/JENKINS-59560: Some SCM plugins don't write anything to the changelog file in some
                 // cases. `WorkflowRun.onCheckout` asks the SCM to parse the changelog file if it exists, and
                 // attempting to parse an empty file will cause an error, so we delete empty files before they even get

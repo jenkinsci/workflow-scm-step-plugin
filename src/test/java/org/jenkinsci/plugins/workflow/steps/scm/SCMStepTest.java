@@ -176,6 +176,17 @@ public class SCMStepTest {
         });
     }
 
+    @Test public void scmParsesFakeChangeLogSCMChangelogFile() {
+        rr.then(r -> {
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                    "node() {\n" +
+                            "  checkout([$class: 'FakeChangeLogSCM'])\n" +
+                            "}", true));
+            r.buildAndAssertSuccess(p);
+        });
+    }
+
     private static void assertPolling(WorkflowJob p, PollingResult.Change expectedChange) {
         assertEquals(expectedChange, p.poll(StreamTaskListener.fromStdout()).change);
     }
@@ -186,16 +197,26 @@ public class SCMStepTest {
         @Override public void checkout(Run<?,?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
             // Unlike the superclass, which adds an XML header to the file, we just ignore the file.
         }
-        @Override public ChangeLogParser createChangeLogParser() {
-            return new ChangeLogParser() {
-                public ChangeLogSet<? extends ChangeLogSet.Entry> parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException, SAXException {
-                    Jenkins.XSTREAM2.fromXML(changelogFile);
-                    throw new AssertionError("The previous line should always fail because the file is empty");
-                }
-            };
-        }
+        ChangeLogParser changeLogParser = createChangeLogParser();
         @TestExtension("scmParsesUnmodifiedChangelogFile")
         public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
+    }
+
+    public static class FakeChangeLogSCM extends NullSCM {
+        @DataBoundConstructor
+        public FakeChangeLogSCM() { }
+        ChangeLogParser changeLogParser = createChangeLogParser();
+        @TestExtension("scmParsesFakeChangeLogSCMChangelogFile")
+        public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
+    }
+
+    public ChangeLogParser createChangeLogParser() {
+        return new ChangeLogParser() {
+            @Override public ChangeLogSet<? extends ChangeLogSet.Entry> parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException, SAXException {
+                Jenkins.XSTREAM2.fromXML(changelogFile);
+                throw new AssertionError("The previous line should always fail because the file is empty");
+            }
+        };
     }
 
 }

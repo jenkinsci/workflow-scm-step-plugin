@@ -205,7 +205,7 @@ public class SCMStepTest {
         @DataBoundConstructor
         public FakeChangeLogSCM() { }
         @Override public void checkout(Run<?,?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
-            // Unlike the superclass, which adds an XML header to the file, we just ignore the file.
+            // TODO: Need to find the appropriate thing to do here. Could be nothing.
         }
         ChangeLogParser changeLogParser = new ChangeLogParser();
         @TestExtension("scmParsesFakeChangeLogSCMChangelogFile")

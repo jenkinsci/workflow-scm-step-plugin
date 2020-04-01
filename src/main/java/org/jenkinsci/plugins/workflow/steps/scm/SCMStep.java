@@ -116,10 +116,10 @@ public abstract class SCMStep extends Step {
             Run<?,?> prev = run.getPreviousBuild();
             if (prev != null) {
                 synchronized (prev) {
-                    MultiSCMRevisionState state = prev.getAction(MultiSCMRevisionState.class);
-                    if (state != null) {
-                        baseline = state.get(scm);
-                    }
+                MultiSCMRevisionState state = prev.getAction(MultiSCMRevisionState.class);
+                if (state != null) {
+                    baseline = state.get(scm);
+                }
                 }
             }
             scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);

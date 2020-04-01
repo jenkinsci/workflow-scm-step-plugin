@@ -47,6 +47,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.impl.subversion.SubversionSampleRepoRule;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -181,10 +182,13 @@ public class SCMStepTest {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
                     "import org.jvnet.hudson.test.FakeChangeLogSCM\n" +
+                    "def testSCM = new FakeChangeLogSCM()\n" +
+                    "testSCM.addChange().withAuthor(/alice$BUILD_NUMBER/)\n" +
                     "node() {\n" +
-                    "  checkout(new FakeChangeLogSCM())\n" +
+                    "  checkout(testSCM)\n" +
                     "}", false));
-            r.buildAndAssertSuccess(p);
+            WorkflowRun b = r.buildAndAssertSuccess(p);
+            assertThat(b.getCulpritIds().toString(), Matchers.containsString("alice1"));
         });
     }
 

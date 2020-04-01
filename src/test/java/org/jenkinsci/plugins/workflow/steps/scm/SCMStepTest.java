@@ -29,7 +29,6 @@ import hudson.Launcher;
 import hudson.model.Label;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.scm.ChangeLogParser;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.NullSCM;
 import hudson.scm.PollingResult;
@@ -197,7 +196,7 @@ public class SCMStepTest {
         @Override public void checkout(Run<?,?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
             // Unlike the superclass, which adds an XML header to the file, we just ignore the file.
         }
-        ChangeLogParser changeLogParser = createChangeLogParser();
+        ChangeLogParser changeLogParser = new ChangeLogParser();
         @TestExtension("scmParsesUnmodifiedChangelogFile")
         public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
     }
@@ -205,17 +204,18 @@ public class SCMStepTest {
     public static class FakeChangeLogSCM extends NullSCM {
         @DataBoundConstructor
         public FakeChangeLogSCM() { }
-        ChangeLogParser changeLogParser = createChangeLogParser();
+        @Override public void checkout(Run<?,?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+            // Unlike the superclass, which adds an XML header to the file, we just ignore the file.
+        }
+        ChangeLogParser changeLogParser = new ChangeLogParser();
         @TestExtension("scmParsesFakeChangeLogSCMChangelogFile")
         public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
     }
 
-    public ChangeLogParser createChangeLogParser() {
-        return new ChangeLogParser() {
-            @Override public ChangeLogSet<? extends ChangeLogSet.Entry> parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException, SAXException {
-                Jenkins.XSTREAM2.fromXML(changelogFile);
-                throw new AssertionError("The previous line should always fail because the file is empty");
-            }
+    public static class ChangeLogParser extends NullSCM {
+        public ChangeLogSet<? extends ChangeLogSet.Entry> parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException, SAXException {
+            Jenkins.XSTREAM2.fromXML(changelogFile);
+            throw new AssertionError("The previous line should always fail because the file is empty");
         };
     }
 

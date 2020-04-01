@@ -176,6 +176,18 @@ public class SCMStepTest {
         });
     }
 
+    @Test public void scmParsesChangelogFileFromFakeChangeLogSCM() {
+        rr.then(r -> {
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                    "import org.jvnet.hudson.test.FakeChangeLogSCM\n" +
+                            "node() {\n" +
+                            "  checkout(new FakeChangeLogSCM())\n" +
+                            "}", false));
+            r.buildAndAssertSuccess(p);
+        });
+    }
+
     private static void assertPolling(WorkflowJob p, PollingResult.Change expectedChange) {
         assertEquals(expectedChange, p.poll(StreamTaskListener.fromStdout()).change);
     }

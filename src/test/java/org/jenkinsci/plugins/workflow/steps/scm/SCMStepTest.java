@@ -181,9 +181,9 @@ public class SCMStepTest {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
                     "import org.jvnet.hudson.test.FakeChangeLogSCM\n" +
-                            "node() {\n" +
-                            "  checkout(new FakeChangeLogSCM())\n" +
-                            "}", false));
+                    "node() {\n" +
+                    "  checkout(new FakeChangeLogSCM())\n" +
+                    "}", false));
             r.buildAndAssertSuccess(p);
         });
     }

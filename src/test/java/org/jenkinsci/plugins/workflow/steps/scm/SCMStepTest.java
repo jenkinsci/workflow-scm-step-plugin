@@ -40,6 +40,7 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import jenkins.model.Jenkins;
@@ -188,7 +189,7 @@ public class SCMStepTest {
                     "  checkout(testSCM)\n" +
                     "}", false));
             WorkflowRun b = r.buildAndAssertSuccess(p);
-            assertThat(b.getCulpritIds().toString(), Matchers.containsString("alice1"));
+            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
         });
     }
 

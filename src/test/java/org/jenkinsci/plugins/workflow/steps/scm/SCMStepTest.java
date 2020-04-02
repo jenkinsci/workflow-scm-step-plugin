@@ -193,6 +193,31 @@ public class SCMStepTest {
         });
     }
 
+    @Test public void gitChangelogSmokes() {
+        rr.then(r -> {
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                    "node() {\n" +
+                            "  checkout(scm: [\n" +
+                            "    $class: 'GitSCM',\n" +
+                            "    branches: [[name: '*/master']],\n" +
+                            "    userRemoteConfigs: [[url: '" + sampleGitRepo.fileUrl() + "']]\n" +
+                            "  ])\n" +
+                            "}", true));
+            sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
+            sampleGitRepo.write("foo", "bar");
+            sampleGitRepo.git("add", "foo");
+            sampleGitRepo.git("commit", "-m", "Initial commit");
+            WorkflowRun b1 = r.buildAndAssertSuccess(p);
+            assertThat(b1.getCulpritIds(), Matchers.equalTo(Collections.emptySet()));
+            sampleGitRepo.write("foo", "bar1");
+            sampleGitRepo.git("add", "foo");
+            sampleGitRepo.git("commit", "-m", "Second commit");
+            WorkflowRun b2 = r.buildAndAssertSuccess(p);
+            assertThat(b2.getCulpritIds(), Matchers.equalTo(Collections.singleton("gits")));
+        });
+    }
+
     private static void assertPolling(WorkflowJob p, PollingResult.Change expectedChange) {
         assertEquals(expectedChange, p.poll(StreamTaskListener.fromStdout()).change);
     }

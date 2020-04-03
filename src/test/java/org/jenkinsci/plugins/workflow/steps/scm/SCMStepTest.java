@@ -40,6 +40,7 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import jenkins.model.Jenkins;
@@ -47,6 +48,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.impl.subversion.SubversionSampleRepoRule;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -165,7 +167,7 @@ public class SCMStepTest {
     }
 
     @Issue(value = { "JENKINS-57918", "JENKINS-59560" })
-    @Test public void scmParsesUmodifiedChangelogFile() {
+    @Test public void scmParsesUnmodifiedChangelogFile() {
         rr.then(r -> {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
@@ -173,6 +175,46 @@ public class SCMStepTest {
                 "  checkout([$class: 'InvalidChangelogSCM'])\n" +
                 "}", true));
             r.buildAndAssertSuccess(p);
+        });
+    }
+
+    @Test public void scmParsesChangelogFileFromFakeChangeLogSCM() {
+        rr.then(r -> {
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                    "import org.jvnet.hudson.test.FakeChangeLogSCM\n" +
+                    "def testSCM = new FakeChangeLogSCM()\n" +
+                    "testSCM.addChange().withAuthor(/alice$BUILD_NUMBER/)\n" +
+                    "node() {\n" +
+                    "  checkout(testSCM)\n" +
+                    "}", false));
+            WorkflowRun b = r.buildAndAssertSuccess(p);
+            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
+        });
+    }
+
+    @Test public void gitChangelogSmokes() {
+        rr.then(r -> {
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                    "node() {\n" +
+                            "  checkout(scm: [\n" +
+                            "    $class: 'GitSCM',\n" +
+                            "    branches: [[name: '*/master']],\n" +
+                            "    userRemoteConfigs: [[url: '" + sampleGitRepo.fileUrl() + "']]\n" +
+                            "  ])\n" +
+                            "}", true));
+            sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
+            sampleGitRepo.write("foo", "bar");
+            sampleGitRepo.git("add", "foo");
+            sampleGitRepo.git("commit", "-m", "Initial commit");
+            WorkflowRun b1 = r.buildAndAssertSuccess(p);
+            assertThat(b1.getCulpritIds(), Matchers.equalTo(Collections.emptySet()));
+            sampleGitRepo.write("foo", "bar1");
+            sampleGitRepo.git("add", "foo");
+            sampleGitRepo.git("commit", "-m", "Second commit");
+            WorkflowRun b2 = r.buildAndAssertSuccess(p);
+            assertThat(b2.getCulpritIds(), Matchers.equalTo(Collections.singleton("gits")));
         });
     }
 
@@ -194,7 +236,7 @@ public class SCMStepTest {
                 }
             };
         }
-        @TestExtension("scmParsesUmodifiedChangelogFile")
+        @TestExtension("scmParsesUnmodifiedChangelogFile")
         public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
     }
 

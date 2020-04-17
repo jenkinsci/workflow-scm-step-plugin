@@ -1,5 +1,13 @@
 ## Changelog
 
+### 2.11
+
+Release date: 2020-04-17
+
+-   Internal: Modify the empty changelog file deletion added in version 2.10 to
+    only delete empty changelog files whose last modified date is unchanged from
+    when the file was created so that FakeChangelogSCM works in tests. ([PR 40](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/40))
+
 ### 2.10
 
 Release date: 2020-01-22

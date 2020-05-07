@@ -5,9 +5,9 @@
     This is a special step that will checkout using the configuration
     options offered by any Pipeline-compatible SCM plugin.
     Install the corresponding SCM plugin and select it from the list in the
-    <strong><a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a?</strong>.
+    <strong><a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a></strong>.
     The
-    <strong><a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a?</strong>
+    <strong><a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a></strong>
     uses the installed SCM plugins of your Jenkins server to suggest pipeline snippets.
     </p>
     <p>This step returns a <code>Map</code> of any variables the SCM plugin would

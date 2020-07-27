@@ -1,0 +1,6 @@
+name: workflow-scm-step
+packages:
+  - path: org.jenkinsci.plugins.workflow.steps.scm
+  - path: org.jvnet.hudson.test
+  - path: jenkins.plugins.git
+  - path: jenkins.scm.impl.subversion

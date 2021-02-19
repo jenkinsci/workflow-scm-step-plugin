@@ -180,6 +180,9 @@ public class SCMStepTest {
 
     @Test public void scmParsesChangelogFileFromFakeChangeLogSCM() {
         rr.then(r -> {
+            // sampleGitRepo is not actually used in this test, but for reasons unclear to me, if you remove the call to
+            // init, checkoutsRestored and gitChangelogSmokes fail when you run the entire test suite.
+            sampleGitRepo.init();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
                     "import org.jvnet.hudson.test.FakeChangeLogSCM\n" +

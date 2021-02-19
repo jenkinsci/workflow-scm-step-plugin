@@ -201,12 +201,8 @@ public class SCMStepTest {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
                     "node() {\n" +
-                            "  checkout(scm: [\n" +
-                            "    $class: 'GitSCM',\n" +
-                            "    branches: [[name: '*/master']],\n" +
-                            "    userRemoteConfigs: [[url: '" + sampleGitRepo.fileUrl() + "']]\n" +
-                            "  ])\n" +
-                            "}", true));
+                    "  git($/" + sampleGitRepo + "/$)\n" +
+                    "}", true));
             sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
             sampleGitRepo.write("foo", "bar");
             sampleGitRepo.git("add", "foo");

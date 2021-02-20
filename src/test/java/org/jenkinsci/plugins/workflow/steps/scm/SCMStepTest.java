@@ -180,9 +180,6 @@ public class SCMStepTest {
 
     @Test public void scmParsesChangelogFileFromFakeChangeLogSCM() {
         rr.then(r -> {
-            // sampleGitRepo is not actually used in this test, but for reasons unclear to me, if you remove the call to
-            // init, checkoutsRestored and gitChangelogSmokes fail when you run the entire test suite.
-            sampleGitRepo.init();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
                     "import org.jvnet.hudson.test.FakeChangeLogSCM\n" +
@@ -198,6 +195,7 @@ public class SCMStepTest {
 
     @Test public void gitChangelogSmokes() {
         rr.then(r -> {
+            sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
                     "node() {\n" +
@@ -207,7 +205,6 @@ public class SCMStepTest {
                             "    userRemoteConfigs: [[url: '" + sampleGitRepo.fileUrl() + "']]\n" +
                             "  ])\n" +
                             "}", true));
-            sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
             sampleGitRepo.write("foo", "bar");
             sampleGitRepo.git("add", "foo");
             sampleGitRepo.git("commit", "-m", "Initial commit");

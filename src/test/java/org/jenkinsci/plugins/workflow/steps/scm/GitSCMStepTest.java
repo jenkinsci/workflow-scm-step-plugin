@@ -118,6 +118,8 @@ public class GitSCMStepTest {
                     String repo = sampleGitRepo.fileUrl();
                     URI repoURI = new URI(repo);
                     assertThat("Repo: " + repo, new File(repoURI), is(anExistingDirectory()));
+                    File gitDir = new File(new File(repoURI), ".git");
+                    assertThat("gitDir: " + repo + "/.git", gitDir, is(anExistingDirectory()));
                     WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
                     p.setDefinition(
                             new CpsFlowDefinition(

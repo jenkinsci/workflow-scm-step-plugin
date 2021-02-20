@@ -24,7 +24,12 @@
 
 package org.jenkinsci.plugins.workflow.steps.scm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.io.FileMatchers.anExistingDirectory;
 
 import hudson.model.Label;
 import hudson.scm.ChangeLogSet;
@@ -45,6 +50,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -108,8 +114,10 @@ public class GitSCMStepTest {
     public void gitChangelogSmokes() {
         rr.then(
                 r -> {
-                    sampleGitRepo
-                            .init(); // GitSampleRepoRule provides default user gits@mplereporule
+                    sampleGitRepo.init();
+                    String repo = sampleGitRepo.fileUrl();
+                    URI repoURI = new URI(repo);
+                    assertThat("Repo: " + repo, new File(repoURI), is(anExistingDirectory()));
                     WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
                     p.setDefinition(
                             new CpsFlowDefinition(
@@ -118,7 +126,7 @@ public class GitSCMStepTest {
                                             + "    $class: 'GitSCM',\n"
                                             + "    branches: [[name: '*/master']],\n"
                                             + "    userRemoteConfigs: [[url: '"
-                                            + sampleGitRepo.fileUrl()
+                                            + repo
                                             + "']]\n"
                                             + "  ])\n"
                                             + "}",

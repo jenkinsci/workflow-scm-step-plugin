@@ -57,7 +57,9 @@ import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.ClassRule;
+import org.junit.FixMethodOrder;
 import org.junit.Rule;
+import org.junit.runners.MethodSorters;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
@@ -65,6 +67,7 @@ import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.xml.sax.SAXException;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING) // TODO: checkoutsRestored and gitChangelogSmokes fail if they run after the other tests.
 public class SCMStepTest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();

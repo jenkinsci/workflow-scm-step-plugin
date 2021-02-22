@@ -195,12 +195,12 @@ public class SCMStepTest {
 
     @Test public void gitChangelogSmokes() {
         rr.then(r -> {
+            sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
                     "node() {\n" +
                     "  git($/" + sampleGitRepo + "/$)\n" +
                     "}", true));
-            sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
             sampleGitRepo.write("foo", "bar");
             sampleGitRepo.git("add", "foo");
             sampleGitRepo.git("commit", "-m", "Initial commit");

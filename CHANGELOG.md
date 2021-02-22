@@ -1,5 +1,12 @@
 ## Changelog
 
+### 2.12
+
+Release date: 2020-02-22
+
+-   Docs: Update help text for the `checkout` step to link to information about the Pipeline Snippet Generator and remove deprecated terminology from docs ([PR #42](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/42))
+-   Internal: Update minimum required Jenkins version to 2.222.4 and update dependencies ([PR #44](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/44))
+
 ### 2.11
 
 Release date: 2020-04-17

@@ -2,11 +2,13 @@
 <?jelly escape-by-default='true'?>
 <div xmlns:j="jelly:core" xmlns:st="jelly:stapler">
     <p>
-    This is a special step that allows to run checkouts using any configuration
+    This is a special step that will checkout using the configuration
     options offered by any Pipeline-compatible SCM plugin.
-    To use a concrete SCM implementations, just install the corresponding plugin 
-    and check if it is shown in the list below.
-    Then select the SCM to use from the dropdown list and configure it as needed.
+    Install the corresponding SCM plugin and select it from the list in the
+    <strong><a href="https://jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a></strong>.
+    The
+    <strong><a href="https://jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a></strong>
+    uses the installed SCM plugins of your Jenkins server to suggest pipeline snippets.
     </p>
     <p>This step returns a <code>Map</code> of any variables the SCM plugin would
     set in a Freestyle job, so if your SCM is git, you can do:

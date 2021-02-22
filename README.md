@@ -13,7 +13,7 @@ The goals are the maximum possible compatibility with existing plugins, and grea
 
 A freestyle project has a single SCM configured in the UI that governs the one and only workspace for the build.
 A Pipeline can be configured similarly, but the SCM definition becomes a regular step in its script.
-In the simplest case you would just do an SCM clone/update at the start of your script, as soon as you have allocated a slave with a workspace:
+In the simplest case you would just do an SCM clone/update at the start of your script, as soon as you have allocated an agent with a workspace:
 
 ```
 node {
@@ -23,7 +23,7 @@ node {
 ```
 
 Jenkins will clone the repository into the workspace and continue with your script.
-(Subsequent builds will update rather than clone, if the same slave and workspace are available again.)
+(Subsequent builds will update rather than clone, if the same agent and workspace are available again.)
 
 ### Multiple SCMs
 
@@ -31,7 +31,7 @@ While freestyle projects can use the Multiple SCMs plugin to check out more than
 or specify multiple locations in SCM plugins that support that (notably the Git plugin),
 this support is quite limited.
 In a Pipeline you can check out multiple SCMs, of the same or different kinds, in the same or different workspaces, wherever and whenever you like.
-For example, to check out and build several repositories in parallel, each on its own slave:
+For example, to check out and build several repositories in parallel, each on its own agent:
 
 ```
 parallel repos.collectEntries {repo -> [/* thread label */repo, {
@@ -57,7 +57,7 @@ This means that you can run multiple SCMs, even from a dynamic list, and get a r
 
 If you configure the _Poll SCM_ trigger in the Pipeline’s UI configuration screen, then by default Jenkins will also poll for changes according to the selected _Schedule_, and schedule new builds automatically if changes are detected.
 (Note that this configuration is not part of the Pipeline script, because it affects activities that Jenkins runs outside of the Pipeline.)
-Some SCMs allow polling with no workspace, which is ideal; others will try to lock the same slave and workspace previously used, to run polling on the slave.
+Some SCMs allow polling with no workspace, which is ideal; others will try to lock the same agent and workspace previously used, to run polling on the agent.
 
 To avoid polling the server repeatedly, most SCM plugins allow remote commit triggers, such as the `/git/notifyCommit?url=…` HTTP endpoint in the case of the Git plugin.
 These also work with Pipelines, unless (as with freestyle projects) you checked _Ignore post-commit hooks_ in a _Poll SCM_ block.
@@ -79,7 +79,7 @@ The `checkout` step may be used to run any other SCM plugin, provided that it ha
 It could also be used to run an SCM for which there is a special integration that lacks support for an exotic feature.
 The step takes an `scm` parameter which is a map containing at least a `$class` parameter giving the full or simple class name of the desired `SCM` implementation, and the standard `poll` and `changelog` parameters.
 
-It also takes any other parameters supported by the SCM plugin in its configuration form, using their internal names and values; use _Snippet Generator_ to get a detailed example for your SCM.
+It also takes any other parameters supported by the SCM plugin in its configuration form, using their internal names and values; use [_Snippet Generator_](https://jenkins.io/redirect/pipeline-snippet-generator)to get a detailed example for your SCM.
 Optional parameters can be omitted and will take their default values (to the extent supported by the SCM plugin).
 For example, to run Mercurial (1.51-beta-2 or higher):
 

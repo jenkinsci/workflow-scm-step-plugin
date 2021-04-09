@@ -7,7 +7,8 @@
 ## Introduction
 
 This plugin allows pipelines to use standard Jenkins SCM plugins to check out source code.
-The goals are the maximum possible compatibility with existing plugins, and great flexibility for script authors. The ["Pipeline Syntax" snippet generator](https://www.jenkins.io/redirect/pipeline-snippet-generator) guides the user to define the checkout step.
+The goals are the maximum possible compatibility with existing plugins, and great flexibility for script authors. 
+The ["Pipeline Syntax" snippet generator](https://www.jenkins.io/redirect/pipeline-snippet-generator) guides the user to define the checkout step.
 
 ## Features
 

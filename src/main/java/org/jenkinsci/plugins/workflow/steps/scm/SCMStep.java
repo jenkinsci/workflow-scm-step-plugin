@@ -39,6 +39,8 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -51,6 +53,8 @@ import org.kohsuke.stapler.DataBoundSetter;
  * A step which uses some kind of {@link SCM}.
  */
 public abstract class SCMStep extends Step {
+
+    private static final Logger LOGGER = Logger.getLogger(SCMStep.class.getName());
 
     private boolean poll = true;
     private boolean changelog = true;
@@ -147,7 +151,11 @@ public abstract class SCMStep extends Step {
                 }
             }
             for (SCMListener l : SCMListener.all()) {
-                l.onCheckout(run, scm, workspace, listener, changelogFile, pollingBaseline);
+                try {
+                    l.onCheckout(run, scm, workspace, listener, changelogFile, pollingBaseline);
+                } catch (RuntimeException x) {
+                    LOGGER.log(Level.WARNING, null, x);
+                }
             }
             scm.postCheckout(run, launcher, workspace, listener);
         } catch (Exception e) {

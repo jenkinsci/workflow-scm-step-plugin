@@ -1,5 +1,15 @@
 ## Changelog
 
+### 2.13
+
+Release date: 2020-06-17
+
+-   Fix: Tolerate RuntimeException from SCMListener.onCheckout ([PR #51](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/51))
+-   Internal: Use Subversion version specified in BOM ([PR #52](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/52))
+-   Docs: Fix typo in README ([PR #47](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/47)) 
+-   Docs: [JENKINS-65287] Add missing help ([JENKINS-65287](https://issues.jenkins.io/browse/JENKINS-65287)) 
+-   Docs: [JENKINS-65337] Suggest Pipeline Syntax snippet generator in the plugin doc ([JENKINS-65337](https://issues.jenkins.io/browse/JENKINS-65337)) 
+
 ### 2.12
 
 Release date: 2020-02-22

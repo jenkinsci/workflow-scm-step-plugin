@@ -2,7 +2,7 @@
 
 ### 2.13
 
-Release date: 2020-06-17
+Release date: 2021-06-17
 
 -   Fix: Tolerate RuntimeException from SCMListener.onCheckout ([PR #51](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/51))
 -   Internal: Use Subversion version specified in BOM ([PR #52](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/52))
@@ -12,7 +12,7 @@ Release date: 2020-06-17
 
 ### 2.12
 
-Release date: 2020-02-22
+Release date: 2021-02-22
 
 -   Docs: Update help text for the `checkout` step to link to information about the Pipeline Snippet Generator and remove deprecated terminology from docs ([PR #42](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/42))
 -   Internal: Update minimum required Jenkins version to 2.222.4 and update dependencies ([PR #44](https://github.com/jenkinsci/workflow-scm-step-plugin/pull/44))

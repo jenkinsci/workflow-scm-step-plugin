@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -79,7 +79,7 @@ public abstract class SCMStep extends Step {
         return new StepExecutionImpl(this, context);
     }
 
-    protected abstract @Nonnull SCM createSCM();
+    protected abstract @NonNull SCM createSCM();
 
     public static final class StepExecutionImpl extends SynchronousNonBlockingStepExecution<Map<String,String>> {
 

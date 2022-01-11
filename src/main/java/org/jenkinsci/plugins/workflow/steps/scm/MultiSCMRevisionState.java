@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A special revision state that can accommodate multiple SCMs, using {@link SCM#getKey}.
@@ -44,7 +44,7 @@ final class MultiSCMRevisionState extends SCMRevisionState {
 		revisionStates = new HashMap<String, SCMRevisionState>();
 	}
 
-	public void add(@Nonnull SCM scm, @Nonnull SCMRevisionState scmState) {
+	public void add(@NonNull SCM scm, @NonNull SCMRevisionState scmState) {
         String key = scm.getKey();
         SCMRevisionState old = revisionStates.put(key, scmState);
         if (old != null) {
@@ -52,7 +52,7 @@ final class MultiSCMRevisionState extends SCMRevisionState {
         }
 	}
 
-	public SCMRevisionState get(@Nonnull SCM scm) {
+	public SCMRevisionState get(@NonNull SCM scm) {
 		return revisionStates.get(scm.getKey());
 	}
 

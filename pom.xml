@@ -9,7 +9,7 @@
     </parent>
     <groupId>org.jenkins-ci.plugins.workflow</groupId>
     <artifactId>workflow-scm-step</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>${changelist}</version>
     <packaging>hpi</packaging>
     <name>Pipeline: SCM Step</name>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
@@ -38,8 +38,7 @@
         </pluginRepository>
     </pluginRepositories>
     <properties>
-        <revision>2.14</revision>
-        <changelist>-SNAPSHOT</changelist>
+        <changelist>999999-SNAPSHOT</changelist>
         <jenkins.version>2.289.1</jenkins.version>
         <svnkit.version>1.10.1</svnkit.version>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>

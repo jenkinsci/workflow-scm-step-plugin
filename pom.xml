@@ -41,7 +41,7 @@
         <revision>2.14</revision>
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.289.1</jenkins.version>
-        <svnkit.version>1.10.1</svnkit.version>
+        <svnkit.version>1.10.5</svnkit.version>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     </properties>
     <dependencyManagement>

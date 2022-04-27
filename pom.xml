@@ -61,7 +61,7 @@
     </dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-step-api</artifactId>
         </dependency>
         <dependency>

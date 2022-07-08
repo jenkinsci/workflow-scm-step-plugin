@@ -115,14 +115,13 @@ public class SCMStepTest {
         });
         rr.then(r -> {
             WorkflowJob p = r.jenkins.getItemByFullName("p", WorkflowJob.class);
-            r.createOnlineSlave(Label.get("remote"));
             sampleGitRepo.write("nextfile", "");
             sampleGitRepo.git("add", "nextfile");
             sampleGitRepo.git("commit", "--message=next");
             sampleGitRepo.notifyCommit(r);
             WorkflowRun b = p.getLastBuild();
             assertEquals(2, b.number);
-            r.assertLogContains("Cloning the remote Git repository", b); // new slave, new workspace
+            r.assertLogContains("Fetching changes from the remote Git repository", b);
             List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = b.getChangeSets();
             assertEquals(1, changeSets.size());
             ChangeLogSet<? extends ChangeLogSet.Entry> changeSet = changeSets.get(0);

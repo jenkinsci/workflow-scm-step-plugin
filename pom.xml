@@ -153,7 +153,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>mercurial</artifactId>
-            <version>2.12</version>
+            <version>1251.va_b_121f184902</version>
             <scope>test</scope>
         </dependency>
         <dependency>

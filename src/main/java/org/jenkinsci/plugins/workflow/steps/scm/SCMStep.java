@@ -66,11 +66,11 @@ public abstract class SCMStep extends Step {
     public boolean isPoll() {
         return poll;
     }
-    
+
     @DataBoundSetter public void setPoll(boolean poll) {
         this.poll = poll;
     }
-    
+
     public boolean isChangelog() {
         return changelog;
     }
@@ -135,22 +135,21 @@ public abstract class SCMStep extends Step {
                 try {
                     scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
                     break;
-                } catch (AbortException e) {
-                    // abort exception might have a null message.
-                    // If so, just skip echoing it.
-                    if (e.getMessage() != null) {
-                        listener.error(e.getMessage());
-                    }
                 } catch (InterruptedIOException e) {
                     throw e;
                 } catch (Exception e) {
-                    // checkout error not yet reported
-                    Functions.printStackTrace(e, listener.error("Checkout failed"));
+                    // We follow the same exception output behavior as jenkinsci/workflow-cps-plugin#147,
+                    // but throw up the original exception if this is the last attempt
+                    if (e instanceof AbortException && e.getMessage() != null) {
+                        listener.error(e.getMessage());
+                    } else {
+                        Functions.printStackTrace(e, listener.error("Checkout failed"));
+                    }
+                    if (retryCount == 0) {
+                        listener.error("Maximum checkout retry attempts reached, aborting");// all attempts failed
+                        throw e;
+                    }
                 }
-
-                if (retryCount == 0)   // all attempts failed
-                    throw new AbortException("Maximum checkout retry attempts reached, aborting");
-
                 listener.getLogger().println("Retrying after 10 seconds");
                 Thread.sleep(10000);
             }

@@ -241,7 +241,7 @@ public class SCMStepTest {
 
 
     @Test
-    public void scmRetryFromFakeChangeLogSCM() {
+    public void scmRetryFromFakeUnstableChangeLogSCM() {
         rr.then(r -> {
             r.jenkins.setScmCheckoutRetryCount(2);
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
@@ -257,6 +257,7 @@ public class SCMStepTest {
             r.assertLogContains("Checkout failed", b);
             r.assertLogContains("IO Exception happens", b);
             r.assertLogContains("Retrying after 10 seconds", b);
+            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
         });
     }
 }

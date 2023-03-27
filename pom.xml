@@ -40,7 +40,7 @@
     <properties>
         <changelist>999999-SNAPSHOT</changelist>
         <jenkins.version>2.289.3</jenkins.version>
-        <svnkit.version>1.10.1</svnkit.version>
+        <svnkit.version>1.10.11</svnkit.version>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     </properties>
     <dependencyManagement>

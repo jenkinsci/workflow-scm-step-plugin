@@ -238,4 +238,26 @@ public class SCMStepTest {
         public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
     }
 
+
+
+    @Test
+    public void scmRetryFromFakeUnstableChangeLogSCM() {
+        rr.then(r -> {
+            r.jenkins.setScmCheckoutRetryCount(2);
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                    "import org.jenkinsci.plugins.workflow.steps.scm.UnstableSCM\n" +
+                            "def testSCM = new UnstableSCM(2)\n" +
+                            "testSCM.addChange().withAuthor(/alice$BUILD_NUMBER/)\n" +
+                            "node() {\n" +
+                            "  checkout(testSCM)\n" +
+                            "}", false));
+            WorkflowRun b = r.buildAndAssertSuccess(p);
+            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
+            r.assertLogContains("Checkout failed", b);
+            r.assertLogContains("IO Exception happens", b);
+            r.assertLogContains("Retrying after 10 seconds", b);
+            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
+        });
+    }
 }

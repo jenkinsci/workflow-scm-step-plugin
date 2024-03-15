@@ -25,7 +25,9 @@
 package org.jenkinsci.plugins.workflow.steps.scm;
 
 import com.google.common.collect.ImmutableSet;
+import hudson.AbortException;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -33,6 +35,7 @@ import hudson.model.listeners.SCMListener;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
+import java.io.InterruptedIOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -42,6 +45,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -62,11 +66,11 @@ public abstract class SCMStep extends Step {
     public boolean isPoll() {
         return poll;
     }
-    
+
     @DataBoundSetter public void setPoll(boolean poll) {
         this.poll = poll;
     }
-    
+
     public boolean isChangelog() {
         return changelog;
     }
@@ -126,7 +130,30 @@ public abstract class SCMStep extends Step {
                 }
                 }
             }
-            scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
+
+            for (int retryCount = Jenkins.get().getScmCheckoutRetryCount(); retryCount >= 0; retryCount--) {
+                try {
+                    scm.checkout(run, launcher, workspace, listener, changelogFile, baseline);
+                    break;
+                } catch (InterruptedIOException e) {
+                    throw e;
+                } catch (Exception e) {
+                    // We follow the same exception output behavior as jenkinsci/workflow-cps-plugin#147,
+                    // but throw up the original exception if this is the last attempt
+                    if (e instanceof AbortException && e.getMessage() != null) {
+                        listener.error(e.getMessage());
+                    } else {
+                        Functions.printStackTrace(e, listener.error("Checkout failed"));
+                    }
+                    if (retryCount == 0) {
+                        listener.error("Maximum checkout retry attempts reached, aborting");// all attempts failed
+                        throw e;
+                    }
+                }
+                listener.getLogger().println("Retrying after 10 seconds");
+                Thread.sleep(10000);
+            }
+
             if (changelogFile != null && changelogFile.length() == 0
                     && changelogOriginalModifiedDate != null && changelogFile.lastModified() == changelogOriginalModifiedDate) {
                 // JENKINS-57918/JENKINS-59560/FakeChangeLogSCM: Some SCMs don't write anything to the changelog file in some

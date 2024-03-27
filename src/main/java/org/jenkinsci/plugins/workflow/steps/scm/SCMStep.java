@@ -46,6 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -138,6 +139,10 @@ public abstract class SCMStep extends Step {
                 } catch (InterruptedIOException e) {
                     throw e;
                 } catch (Exception e) {
+                    // Avoid retrying if the build is aborted
+                    if (e instanceof FlowInterruptedException && ((FlowInterruptedException)e).isActualInterruption()) {
+                        throw e;
+                    }
                     // We follow the same exception output behavior as jenkinsci/workflow-cps-plugin#147,
                     // but throw up the original exception if this is the last attempt
                     if (e instanceof AbortException && e.getMessage() != null) {

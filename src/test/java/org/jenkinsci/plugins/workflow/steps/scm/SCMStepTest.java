@@ -62,7 +62,7 @@ import org.junit.Rule;
 import org.junit.runners.MethodSorters;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.JenkinsSessionRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.xml.sax.SAXException;
@@ -71,13 +71,13 @@ import org.xml.sax.SAXException;
 public class SCMStepTest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule public RestartableJenkinsRule rr = new RestartableJenkinsRule();
+    @Rule public JenkinsSessionRule rr = new JenkinsSessionRule();
     @Rule public GitSampleRepoRule sampleGitRepo = new GitSampleRepoRule();
     @Rule public SubversionSampleRepoRule sampleSvnRepo = new SubversionSampleRepoRule();
 
     @Issue("JENKINS-26100")
     @Test
-    public void scmVars() throws Exception {
+    public void scmVars() throws Throwable {
         rr.then(r -> {
             sampleSvnRepo.init();
             sampleSvnRepo.write("Jenkinsfile", "node('remote') {\n" +
@@ -96,7 +96,7 @@ public class SCMStepTest {
     }
 
     @Issue("JENKINS-26761")
-    @Test public void checkoutsRestored() throws Exception {
+    @Test public void checkoutsRestored() throws Throwable {
         rr.then(r -> {
             sampleGitRepo.init();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
@@ -136,7 +136,7 @@ public class SCMStepTest {
     }
 
     @Issue("JENKINS-32214")
-    @Test public void pollDuringBuild() throws Exception {
+    @Test public void pollDuringBuild() throws Throwable {
         rr.then(r -> {
             sampleSvnRepo.init();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
@@ -169,7 +169,7 @@ public class SCMStepTest {
     }
 
     @Issue(value = { "JENKINS-57918", "JENKINS-59560" })
-    @Test public void scmParsesUnmodifiedChangelogFile() {
+    @Test public void scmParsesUnmodifiedChangelogFile() throws Throwable {
         rr.then(r -> {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
@@ -180,7 +180,7 @@ public class SCMStepTest {
         });
     }
 
-    @Test public void scmParsesChangelogFileFromFakeChangeLogSCM() {
+    @Test public void scmParsesChangelogFileFromFakeChangeLogSCM() throws Throwable {
         rr.then(r -> {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
@@ -195,7 +195,7 @@ public class SCMStepTest {
         });
     }
 
-    @Test public void gitChangelogSmokes() {
+    @Test public void gitChangelogSmokes() throws Throwable {
         rr.then(r -> {
             sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
@@ -241,7 +241,7 @@ public class SCMStepTest {
 
 
     @Test
-    public void scmRetryFromFakeUnstableChangeLogSCM() {
+    public void scmRetryFromFakeUnstableChangeLogSCM() throws Throwable {
         rr.then(r -> {
             r.jenkins.setScmCheckoutRetryCount(2);
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");

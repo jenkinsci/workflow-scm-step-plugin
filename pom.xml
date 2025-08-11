@@ -155,7 +155,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>mercurial</artifactId>
-            <version>1260.vdfb_723cdcc81</version>
+            <version>1323.ve69d2a_db_8a_b_d</version>
             <scope>test</scope>
         </dependency>
         <dependency>

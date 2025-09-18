@@ -40,6 +40,7 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -48,42 +49,65 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.impl.subversion.SubversionSampleRepoRule;
 import org.apache.commons.io.FileUtils;
-import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.ClassRule;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.runners.MethodSorters;
-import org.jvnet.hudson.test.BuildWatcher;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsSessionRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.BuildWatcherExtension;
+import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.xml.sax.SAXException;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING) // TODO: checkoutsRestored and gitChangelogSmokes fail if they run after the other tests.
-public class SCMStepTest {
+@TestMethodOrder(MethodOrderer.MethodName.class) // TODO: checkoutsRestored and gitChangelogSmokes fail if they run after the other tests.
+class SCMStepTest {
 
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule public JenkinsSessionRule rr = new JenkinsSessionRule();
-    @Rule public GitSampleRepoRule sampleGitRepo = new GitSampleRepoRule();
-    @Rule public SubversionSampleRepoRule sampleSvnRepo = new SubversionSampleRepoRule();
+    @SuppressWarnings("unused")
+    @RegisterExtension
+    private static final BuildWatcherExtension BUILD_WATCHER = new BuildWatcherExtension();
+    @RegisterExtension
+    private final JenkinsSessionExtension extension = new JenkinsSessionExtension();
+    private final GitSampleRepoRule sampleGitRepo = new GitSampleRepoRule();
+    private final SubversionSampleRepoRule sampleSvnRepo = new SubversionSampleRepoRule();
+
+    @BeforeEach
+    void beforeEach() throws Throwable {
+        sampleGitRepo.before();
+        Method before = SubversionSampleRepoRule.class.getDeclaredMethod("before");
+        before.setAccessible(true);
+        before.invoke(sampleSvnRepo);
+    }
+
+    @AfterEach
+    void afterEach() throws Exception {
+        sampleGitRepo.after();
+        Method after = SubversionSampleRepoRule.class.getSuperclass().getDeclaredMethod("after");
+        after.setAccessible(true);
+        after.invoke(sampleSvnRepo);
+    }
 
     @Issue("JENKINS-26100")
     @Test
-    public void scmVars() throws Throwable {
-        rr.then(r -> {
+    void scmVars() throws Throwable {
+        extension.then(r -> {
             sampleSvnRepo.init();
-            sampleSvnRepo.write("Jenkinsfile", "node('remote') {\n" +
-                "    def svnRev = checkout(scm).SVN_REVISION\n" +
-                "    echo \"SVN_REVISION is ${svnRev}\"\n" +
-                "}\n");
+            sampleSvnRepo.write("Jenkinsfile", """
+                    node('remote') {
+                        def svnRev = checkout(scm).SVN_REVISION
+                        echo "SVN_REVISION is ${svnRev}"
+                    }
+                    """);
             sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/Jenkinsfile");
             sampleSvnRepo.svnkit("commit", "--message=+Jenkinsfile", sampleSvnRepo.wc());
             long revision = sampleSvnRepo.revision();
@@ -96,8 +120,9 @@ public class SCMStepTest {
     }
 
     @Issue("JENKINS-26761")
-    @Test public void checkoutsRestored() throws Throwable {
-        rr.then(r -> {
+    @Test
+    void checkoutsRestored() throws Throwable {
+        extension.then(r -> {
             sampleGitRepo.init();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.addTrigger(new SCMTrigger(""));
@@ -113,7 +138,7 @@ public class SCMStepTest {
             r.assertLogContains("Cloning the remote Git repository", b);
             FileUtils.copyFile(new File(b.getRootDir(), "build.xml"), System.out);
         });
-        rr.then(r -> {
+        extension.then(r -> {
             WorkflowJob p = r.jenkins.getItemByFullName("p", WorkflowJob.class);
             sampleGitRepo.write("nextfile", "");
             sampleGitRepo.git("add", "nextfile");
@@ -136,8 +161,9 @@ public class SCMStepTest {
     }
 
     @Issue("JENKINS-32214")
-    @Test public void pollDuringBuild() throws Throwable {
-        rr.then(r -> {
+    @Test
+    void pollDuringBuild() throws Throwable {
+        extension.then(r -> {
             sampleSvnRepo.init();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
@@ -168,35 +194,40 @@ public class SCMStepTest {
         });
     }
 
-    @Issue(value = { "JENKINS-57918", "JENKINS-59560" })
-    @Test public void scmParsesUnmodifiedChangelogFile() throws Throwable {
-        rr.then(r -> {
+    @Issue({"JENKINS-57918", "JENKINS-59560"})
+    @Test
+    void scmParsesUnmodifiedChangelogFile() throws Throwable {
+        extension.then(r -> {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
-                "node() {\n" +
-                "  checkout([$class: 'InvalidChangelogSCM'])\n" +
-                "}", true));
+                    """
+                            node() {
+                              checkout([$class: 'InvalidChangelogSCM'])
+                            }""", true));
             r.buildAndAssertSuccess(p);
         });
     }
 
-    @Test public void scmParsesChangelogFileFromFakeChangeLogSCM() throws Throwable {
-        rr.then(r -> {
+    @Test
+    void scmParsesChangelogFileFromFakeChangeLogSCM() throws Throwable {
+        extension.then(r -> {
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
-                    "import org.jvnet.hudson.test.FakeChangeLogSCM\n" +
-                    "def testSCM = new FakeChangeLogSCM()\n" +
-                    "testSCM.addChange().withAuthor(/alice$BUILD_NUMBER/)\n" +
-                    "node() {\n" +
-                    "  checkout(testSCM)\n" +
-                    "}", false));
+                    """
+                            import org.jvnet.hudson.test.FakeChangeLogSCM
+                            def testSCM = new FakeChangeLogSCM()
+                            testSCM.addChange().withAuthor(/alice$BUILD_NUMBER/)
+                            node() {
+                              checkout(testSCM)
+                            }""", false));
             WorkflowRun b = r.buildAndAssertSuccess(p);
-            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
+            assertEquals(Collections.singleton("alice1"), b.getCulpritIds());
         });
     }
 
-    @Test public void gitChangelogSmokes() throws Throwable {
-        rr.then(r -> {
+    @Test
+    void gitChangelogSmokes() throws Throwable {
+        extension.then(r -> {
             sampleGitRepo.init(); // GitSampleRepoRule provides default user gits@mplereporule
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
@@ -207,12 +238,12 @@ public class SCMStepTest {
             sampleGitRepo.git("add", "foo");
             sampleGitRepo.git("commit", "-m", "Initial commit");
             WorkflowRun b1 = r.buildAndAssertSuccess(p);
-            assertThat(b1.getCulpritIds(), Matchers.equalTo(Collections.emptySet()));
+            assertEquals(Collections.emptySet(), b1.getCulpritIds());
             sampleGitRepo.write("foo", "bar1");
             sampleGitRepo.git("add", "foo");
             sampleGitRepo.git("commit", "-m", "Second commit");
             WorkflowRun b2 = r.buildAndAssertSuccess(p);
-            assertThat(b2.getCulpritIds(), Matchers.equalTo(Collections.singleton("gits")));
+            assertEquals(Collections.singleton("gits"), b2.getCulpritIds());
         });
     }
 
@@ -220,13 +251,19 @@ public class SCMStepTest {
         assertEquals(expectedChange, p.poll(StreamTaskListener.fromStdout()).change);
     }
 
+    @SuppressWarnings("unused")
     public static class InvalidChangelogSCM extends NullSCM {
+
         @DataBoundConstructor
         public InvalidChangelogSCM() { }
-        @Override public void checkout(Run<?,?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+
+        @Override
+        public void checkout(Run<?,?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
             // Unlike the superclass, which adds an XML header to the file, we just ignore the file.
         }
-        @Override public ChangeLogParser createChangeLogParser() {
+
+        @Override
+        public ChangeLogParser createChangeLogParser() {
             return new ChangeLogParser() {
                 public ChangeLogSet<? extends ChangeLogSet.Entry> parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException, SAXException {
                     Jenkins.XSTREAM2.fromXML(changelogFile);
@@ -234,30 +271,30 @@ public class SCMStepTest {
                 }
             };
         }
+
         @TestExtension("scmParsesUnmodifiedChangelogFile")
         public static class DescriptorImpl extends NullSCM.DescriptorImpl { }
     }
 
-
-
     @Test
-    public void scmRetryFromFakeUnstableChangeLogSCM() throws Throwable {
-        rr.then(r -> {
+    void scmRetryFromFakeUnstableChangeLogSCM() throws Throwable {
+        extension.then(r -> {
             r.jenkins.setScmCheckoutRetryCount(2);
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.setDefinition(new CpsFlowDefinition(
-                    "import org.jenkinsci.plugins.workflow.steps.scm.UnstableSCM\n" +
-                            "def testSCM = new UnstableSCM(2)\n" +
-                            "testSCM.addChange().withAuthor(/alice$BUILD_NUMBER/)\n" +
-                            "node() {\n" +
-                            "  checkout(testSCM)\n" +
-                            "}", false));
+                    """
+                            import org.jenkinsci.plugins.workflow.steps.scm.UnstableSCM
+                            def testSCM = new UnstableSCM(2)
+                            testSCM.addChange().withAuthor(/alice$BUILD_NUMBER/)
+                            node() {
+                              checkout(testSCM)
+                            }""", false));
             WorkflowRun b = r.buildAndAssertSuccess(p);
-            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
+            assertEquals(Collections.singleton("alice1"), b.getCulpritIds());
             r.assertLogContains("Checkout failed", b);
             r.assertLogContains("IO Exception happens", b);
             r.assertLogContains("Retrying after 10 seconds", b);
-            assertThat(b.getCulpritIds(), Matchers.equalTo(Collections.singleton("alice1")));
+            assertEquals(Collections.singleton("alice1"), b.getCulpritIds());
         });
     }
 }

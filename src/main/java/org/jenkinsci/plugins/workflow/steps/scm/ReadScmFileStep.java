@@ -96,6 +96,10 @@ public final class ReadScmFileStep extends Step {
             return "readScmFile";
         }
 
+        @Override public String getDisplayName() {
+            return "Read file from SCM";
+        }
+
         @Override public Set<? extends Class<?>> getRequiredContext() {
             return Set.of(Run.class, TaskListener.class);
         }

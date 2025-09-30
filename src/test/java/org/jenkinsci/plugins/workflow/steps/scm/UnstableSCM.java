@@ -5,11 +5,13 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.SCMRevisionState;
+import org.jvnet.hudson.test.FakeChangeLogSCM;
 
 import java.io.File;
 import java.io.IOException;
 
-public class UnstableSCM extends org.jvnet.hudson.test.FakeChangeLogSCM {
+@SuppressWarnings("unused")
+public class UnstableSCM extends FakeChangeLogSCM {
     private int failedCount;
 
     public UnstableSCM(int failedCount) {

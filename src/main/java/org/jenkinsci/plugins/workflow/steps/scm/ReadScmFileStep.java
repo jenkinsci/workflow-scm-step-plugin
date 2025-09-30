@@ -69,6 +69,8 @@ public final class ReadScmFileStep extends Step {
 
     private static final class Execution extends SynchronousNonBlockingStepExecution<String> {
 
+        private static final long serialVersionUID = 1;
+
         private final transient ReadScmFileStep step;
 
         Execution(ReadScmFileStep step, StepContext context) {

@@ -55,10 +55,9 @@ public final class ReadScmFileStepTest {
             sampleGitRepo.git("commit", "-a", "--message=feat");
             var p = r.jenkins.createProject(WorkflowJob.class, "p");
             p.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("REPO")));
-            // TODO https://github.com/jenkinsci/git-plugin/pull/1813 enables just: gitSource(REPO)
             p.setDefinition(new CpsFlowDefinition(
                 """
-                def txt = readScmFile path: 'config.txt', version: 'feat', scm: [$class: 'GitSCMSource', remote: REPO]
+                def txt = readScmFile path: 'config.txt', version: 'feat', scm: gitSource(REPO)
                 echo "got $txt"
                 """, true));
             r.assertLogContains("got patched", r.assertBuildStatusSuccess(p.scheduleBuild2(0, new ParametersAction(new StringParameterValue("REPO", sampleGitRepo.toString())))));

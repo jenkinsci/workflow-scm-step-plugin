@@ -35,19 +35,16 @@ import hudson.scm.NullSCM;
 import hudson.scm.PollingResult;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMRevisionState;
-import hudson.scm.SubversionSCM;
+import hudson.plugins.git.GitSCM;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import jenkins.model.Jenkins;
-
 import jenkins.plugins.git.GitSampleRepoRule;
-import jenkins.scm.impl.subversion.SubversionSampleRepoRule;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
@@ -79,43 +76,36 @@ class SCMStepTest {
     @RegisterExtension
     private final JenkinsSessionExtension extension = new JenkinsSessionExtension();
     private final GitSampleRepoRule sampleGitRepo = new GitSampleRepoRule();
-    private final SubversionSampleRepoRule sampleSvnRepo = new SubversionSampleRepoRule();
 
     @BeforeEach
     void beforeEach() throws Throwable {
         sampleGitRepo.before();
-        Method before = SubversionSampleRepoRule.class.getDeclaredMethod("before");
-        before.setAccessible(true);
-        before.invoke(sampleSvnRepo);
     }
 
     @AfterEach
     void afterEach() throws Exception {
         sampleGitRepo.after();
-        Method after = SubversionSampleRepoRule.class.getSuperclass().getDeclaredMethod("after");
-        after.setAccessible(true);
-        after.invoke(sampleSvnRepo);
     }
 
     @Issue("JENKINS-26100")
     @Test
     void scmVars() throws Throwable {
         extension.then(r -> {
-            sampleSvnRepo.init();
-            sampleSvnRepo.write("Jenkinsfile", """
+            sampleGitRepo.init();
+            sampleGitRepo.write("Jenkinsfile", """
                     node('remote') {
-                        def svnRev = checkout(scm).SVN_REVISION
-                        echo "SVN_REVISION is ${svnRev}"
+                        def gitCommit = checkout(scm).GIT_COMMIT
+                        echo "GIT_COMMIT is ${gitCommit}"
                     }
                     """);
-            sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/Jenkinsfile");
-            sampleSvnRepo.svnkit("commit", "--message=+Jenkinsfile", sampleSvnRepo.wc());
-            long revision = sampleSvnRepo.revision();
+            sampleGitRepo.git("add", "Jenkinsfile");
+            sampleGitRepo.git("commit", "--message=+Jenkinsfile");
+            String commit = sampleGitRepo.head();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
-            p.setDefinition(new CpsScmFlowDefinition(new SubversionSCM(sampleSvnRepo.trunkUrl()), "Jenkinsfile"));
+            p.setDefinition(new CpsScmFlowDefinition(new GitSCM(sampleGitRepo.toString()), "Jenkinsfile"));
             r.createOnlineSlave(Label.get("remote"));
             WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-            r.assertLogContains("SVN_REVISION is " + revision, b);
+            r.assertLogContains("GIT_COMMIT is " + commit, b);
         });
     }
 
@@ -164,12 +154,13 @@ class SCMStepTest {
     @Test
     void pollDuringBuild() throws Throwable {
         extension.then(r -> {
-            sampleSvnRepo.init();
+            sampleGitRepo.init();
             WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
-            p.setDefinition(new CpsFlowDefinition(
-                "semaphore 'before'\n" +
-                "node {svn '" + sampleSvnRepo.trunkUrl() + "'}\n" +
-                "semaphore 'after'", true));
+            p.setDefinition(new CpsFlowDefinition("""
+                    semaphore 'before'
+                    node {git($/%s/$)}
+                    semaphore 'after'
+                    """.formatted(sampleGitRepo), true));
             assertPolling(p, PollingResult.Change.INCOMPARABLE);
             WorkflowRun b1 = p.scheduleBuild2(0).waitForStart();
             SemaphoreStep.success("before/1", null);
@@ -177,9 +168,9 @@ class SCMStepTest {
             assertPolling(p, PollingResult.Change.NONE);
             SemaphoreStep.success("after/1", null);
             r.assertBuildStatusSuccess(r.waitForCompletion(b1));
-            sampleSvnRepo.write("file2", "");
-            sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file2");
-            sampleSvnRepo.svnkit("commit", "--message=+file2", sampleSvnRepo.wc());
+            sampleGitRepo.write("file2", "");
+            sampleGitRepo.git("add", "file2");
+            sampleGitRepo.git("commit", "--message=+file2");
             WorkflowRun b2 = p.scheduleBuild2(0).waitForStart();
             SemaphoreStep.success("before/2", null);
             SemaphoreStep.waitForStart("after/2", b2);
@@ -187,10 +178,10 @@ class SCMStepTest {
             WorkflowRun b3 = p.scheduleBuild2(0).waitForStart();
             SemaphoreStep.waitForStart("before/3", b3);
             assertPolling(p, PollingResult.Change.NONE);
-            sampleSvnRepo.write("file3", "");
-            sampleSvnRepo.svnkit("add", sampleSvnRepo.wc() + "/file3");
-            sampleSvnRepo.svnkit("commit", "--message=+file3", sampleSvnRepo.wc());
-            assertPolling(p, PollingResult.Change.SIGNIFICANT);
+            sampleGitRepo.write("file3", "");
+            sampleGitRepo.git("add", "file3");
+            sampleGitRepo.git("commit", "--message=+file3");
+            assertPolling(p, PollingResult.Change.INCOMPARABLE); // GitSCM.compareRemoteRevisionWithImpl returns BUILD_NOW (Change.INCOMPARABLE) when it finds an unbuilt revision
         });
     }
 

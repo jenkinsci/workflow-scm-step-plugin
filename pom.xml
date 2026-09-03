@@ -146,4 +146,20 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludedEnvironmentVariables>
+                        <!-- Exclude GIT_AUTHOR_EMAIL and GIT_COMMITTER_EMAIL from test env. -->
+                        <!-- https://github.com/jenkinsci/bom/issues/7351#issuecomment-5526949568 -->
+                        <excludedEnvironmentVariable>GIT_AUTHOR_EMAIL</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>GIT_COMMITTER_EMAIL</excludedEnvironmentVariable>
+                    </excludedEnvironmentVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

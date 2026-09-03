@@ -152,13 +152,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <environmentVariables>
-                        <!-- GitSampleRepoRule reads GIT_AUTHOR_EMAIL and GIT_COMMITTER_EMAIL from env.
-                             Force them to required value for tests -->
+                    <excludedEnvironmentVariables>
+                        <!-- Exclude GIT_AUTHOR_EMAIL and GIT_COMMITTER_EMAIL from test env. -->
                         <!-- https://github.com/jenkinsci/bom/issues/7351#issuecomment-5526949568 -->
-                        <GIT_AUTHOR_EMAIL>gits@mplereporule</GIT_AUTHOR_EMAIL>
-                        <GIT_COMMITTER_EMAIL>gits@mplereporule</GIT_COMMITTER_EMAIL>
-                    </environmentVariables>
+                        <excludedEnvironmentVariable>GIT_AUTHOR_EMAIL</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>GIT_COMMITTER_EMAIL</excludedEnvironmentVariable>
+                    </excludedEnvironmentVariables>
                 </configuration>
             </plugin>
         </plugins>

@@ -146,4 +146,21 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <!-- GitSampleRepoRule reads GIT_AUTHOR_EMAIL and GIT_COMMITTER_EMAIL from env.
+                             Force them to required value for tests -->
+                        <!-- https://github.com/jenkinsci/bom/issues/7351#issuecomment-5526949568 -->
+                        <GIT_AUTHOR_EMAIL>gits@mplereporule</GIT_AUTHOR_EMAIL>
+                        <GIT_COMMITTER_EMAIL>gits@mplereporule</GIT_COMMITTER_EMAIL>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

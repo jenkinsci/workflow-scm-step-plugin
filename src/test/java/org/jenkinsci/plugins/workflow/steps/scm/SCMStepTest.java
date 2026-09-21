@@ -288,4 +288,26 @@ class SCMStepTest {
             assertEquals(Collections.singleton("alice1"), b.getCulpritIds());
         });
     }
+
+    @Test
+    void pollFalseWithChangelogDoesNotPoll() throws Throwable {
+        extension.then(r -> {
+            sampleGitRepo.init();
+            WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+            p.setDefinition(new CpsFlowDefinition(
+                    "node() {\n" +
+                    "  checkout(scm: [$class: 'GitSCM', branches: [[name: '*/master']], userRemoteConfigs: [[url: $/" + sampleGitRepo + "/$]]], poll: false, changelog: true)\n" +
+                    "}", true));
+            sampleGitRepo.write("foo", "bar");
+            sampleGitRepo.git("add", "foo");
+            sampleGitRepo.git("commit", "-m", "Initial commit");
+            r.buildAndAssertSuccess(p);
+            sampleGitRepo.write("foo", "bar1");
+            sampleGitRepo.git("add", "foo");
+            sampleGitRepo.git("commit", "-m", "Second commit");
+            assertPolling(p, PollingResult.Change.NONE);
+            WorkflowRun b2 = r.buildAndAssertSuccess(p);
+            assertEquals(Collections.singleton("gits"), b2.getCulpritIds());
+        });
+    }
 }
